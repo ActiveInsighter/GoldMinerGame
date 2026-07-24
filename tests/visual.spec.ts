@@ -50,7 +50,7 @@ test("capture primary desktop and mobile UI", async ({ browser }) => {
 
   await openMenu(desktop);
   await desktop.getByRole("button", { name: "声音设置" }).click();
-  await expect(desktop.getByRole("heading", { name: "声音设置" })).toBeVisible();
+  await expect(desktop.getByRole("heading", { name: "声音与本地数据" })).toBeVisible();
   await capture(desktop, "04-settings-desktop.png");
   await desktop.close();
 
@@ -65,12 +65,12 @@ test("capture primary desktop and mobile UI", async ({ browser }) => {
 
   await openMenu(mobile);
   await mobile.getByRole("button", { name: "玩法说明" }).click();
-  await expect(mobile.getByRole("heading", { name: "玩法说明" })).toBeVisible();
+  await expect(mobile.getByRole("heading", { name: "淘金入门" })).toBeVisible();
   await capture(mobile, "07-help-mobile.png");
 
   await openMenu(mobile);
   await mobile.getByRole("button", { name: "成就与记录" }).click();
-  await expect(mobile.getByRole("heading", { name: "成就与记录" })).toBeVisible();
+  await expect(mobile.getByRole("heading", { name: "矿工手册" })).toBeVisible();
   await capture(mobile, "08-achievements-mobile.png");
   await mobile.close();
 });
