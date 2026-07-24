@@ -9,6 +9,7 @@ import {
   type PointerEvent as ReactPointerEvent,
 } from "react";
 import { ArtImage } from "./components/ArtImage";
+import { GameIcon } from "./components/GameIcon";
 import { ArtAssets } from "./config/artAssets";
 import { gameAudio, type AudioSettings } from "./game/audio";
 import {
@@ -92,6 +93,24 @@ const DEFAULT_HUD: HudSnapshot = {
   event: null,
   warning: false,
 };
+
+const VISUAL_PARAMS = new URLSearchParams(window.location.search);
+const VISUAL_SHOP_PREVIEW =
+  VISUAL_PARAMS.has("visual") &&
+  VISUAL_PARAMS.get("visualScreen") === "shop";
+const VISUAL_PREVIEW_RUN: RunState = {
+  mode: "campaign",
+  level: 2,
+  wallet: 2_450,
+  totalScore: 1_620,
+  dynamite: 1,
+  inventory: {},
+};
+const VISUAL_PREVIEW_SHOP: ShopState = createShopState(
+  VISUAL_PREVIEW_RUN.wallet,
+  VISUAL_PREVIEW_RUN.inventory,
+);
+const INITIAL_SCREEN: Screen = VISUAL_SHOP_PREVIEW ? "shop" : "menu";
 
 function formatCoins(value: number): string {
   return Math.max(0, Math.round(value)).toLocaleString("zh-CN");
@@ -219,24 +238,30 @@ function StatPill({
 export function GoldMinerGame() {
   const canvasRef = useRef<HTMLCanvasElement | null>(null);
   const engineRef = useRef<GoldMinerEngine | null>(null);
-  const runRef = useRef<RunState | null>(null);
+  const runRef = useRef<RunState | null>(
+    VISUAL_SHOP_PREVIEW ? VISUAL_PREVIEW_RUN : null,
+  );
   const sessionRef = useRef<Session | null>(null);
   const settingsRef = useRef<StoredAudioSettings>(
     createDefaultSaveData().audio,
   );
-  const screenRef = useRef<Screen>("menu");
+  const screenRef = useRef<Screen>(INITIAL_SCREEN);
 
-  const [screen, setScreenState] = useState<Screen>("menu");
+  const [screen, setScreenState] = useState<Screen>(INITIAL_SCREEN);
   const [save, setSave] = useState<GameSaveData>(() => createDefaultSaveData());
   const [settings, setSettings] = useState<StoredAudioSettings>(
     () => createDefaultSaveData().audio,
   );
-  const [run, setRunState] = useState<RunState | null>(null);
+  const [run, setRunState] = useState<RunState | null>(
+    VISUAL_SHOP_PREVIEW ? VISUAL_PREVIEW_RUN : null,
+  );
   const [session, setSessionState] = useState<Session | null>(null);
   const [hud, setHud] = useState<HudSnapshot>(DEFAULT_HUD);
   const [paused, setPaused] = useState(false);
   const [resultView, setResultView] = useState<ResultView | null>(null);
-  const [shop, setShop] = useState<ShopState | null>(null);
+  const [shop, setShop] = useState<ShopState | null>(
+    VISUAL_SHOP_PREVIEW ? VISUAL_PREVIEW_SHOP : null,
+  );
   const [announcement, setAnnouncement] = useState(
     "欢迎来到黄金矿工：西部淘金记",
   );
@@ -711,7 +736,7 @@ export function GoldMinerGame() {
         <section className="menu-screen" aria-labelledby="game-title">
           <header className="menu-topbar">
             <div className="mini-brand">
-              <span className="brand-pick">⛏</span>
+              <span className="brand-pick"><GameIcon name="pickaxe" /></span>
               <span>OLD CANYON CO.</span>
             </div>
             <div className="menu-records">
@@ -727,7 +752,7 @@ export function GoldMinerGame() {
               aria-label={settings.muted ? "打开声音" : "静音"}
               onClick={() => updateAudioSetting({ muted: !settings.muted })}
             >
-              {settings.muted ? "🔇" : "🔊"}
+              <GameIcon name={settings.muted ? "muted" : "sound"} />
             </button>
           </header>
 
@@ -776,7 +801,7 @@ export function GoldMinerGame() {
 
               <div className="mode-actions">
                 <button type="button" onClick={() => startNew("daily")}>
-                  <span className="mode-icon">☀</span>
+                  <span className="mode-icon"><GameIcon name="daily" /></span>
                   <span>
                     <strong>每日挑战</strong>
                     <small>
@@ -788,7 +813,7 @@ export function GoldMinerGame() {
                   <b>›</b>
                 </button>
                 <button type="button" onClick={() => startNew("endless")}>
-                  <span className="mode-icon">∞</span>
+                  <span className="mode-icon"><GameIcon name="endless" /></span>
                   <span>
                     <strong>无尽矿井</strong>
                     <small>抓取可续时</small>
@@ -801,9 +826,6 @@ export function GoldMinerGame() {
             <div className="menu-visual">
               <div className="wanted-stamp">EST. 1896</div>
               <MinerPortrait />
-              <div className="gold-sample sample-a" />
-              <div className="gold-sample sample-b" />
-              <div className="diamond-sample" />
               <p className="visual-caption">
                 <span>本周矿讯</span>
                 水晶洞穴发现新金脉
@@ -843,7 +865,7 @@ export function GoldMinerGame() {
         <section className="game-screen" aria-label="游戏进行中">
           <header className={`game-hud ${hud.warning ? "hud-warning" : ""}`}>
             <div className="hud-brand">
-              <span>⛏</span>
+              <span><GameIcon name="pickaxe" /></span>
               <div>
                 <small>{modeLabel(hud.mode)}</small>
                 <strong>
@@ -930,7 +952,7 @@ export function GoldMinerGame() {
               onClick={() => engineRef.current?.useDynamite()}
               aria-label={`使用炸药，剩余 ${hud.dynamite} 个`}
             >
-              <span>🧨</span>
+              <span><GameIcon name="dynamite" /></span>
               <strong>爆破</strong>
               <i>×{hud.dynamite}</i>
             </button>
