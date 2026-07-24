@@ -1,0 +1,90 @@
+<!doctype html>
+<html lang="zh-CN">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover" />
+    <meta name="theme-color" content="#2b180f" />
+    <meta name="description" content="使用 Phaser 4 构建的经典黄金矿工浏览器游戏" />
+    <title>黄金矿工：西部淘金记</title>
+  </head>
+  <body>
+    <div id="app" class="app-shell">
+      <header class="topbar">
+        <div>
+          <p class="eyebrow">PHASER 4 EDITION</p>
+          <h1>黄金矿工：西部淘金记</h1>
+        </div>
+        <div class="top-stats" aria-live="polite">
+          <span>最高分 <strong id="high-score">0</strong></span>
+          <span>最高关 <strong id="highest-level">1</strong></span>
+          <span>累计金币 <strong id="total-gold">0</strong></span>
+        </div>
+      </header>
+
+      <main>
+        <section id="menu-screen" class="panel menu-panel">
+          <div class="hero-copy">
+            <p class="badge">浏览器即开即玩 · 键鼠与触屏</p>
+            <h2>把握摆钩节奏，深入矿脉淘金</h2>
+            <p>经典抓钩、重量回收、连击倍率、钻石、岩石、炸药桶和移动地鼠全部保留，并支持跨设备云存档。</p>
+          </div>
+          <div class="mode-grid">
+            <button class="mode-card primary" data-mode="classic">
+              <span>⛏️</span><strong>经典闯关</strong><small>从当前最高关继续挑战</small>
+            </button>
+            <button class="mode-card" data-mode="daily">
+              <span>📅</span><strong>每日挑战</strong><small>当天固定种子与矿区布局</small>
+            </button>
+            <button class="mode-card" data-mode="endless">
+              <span>♾️</span><strong>无尽矿井</strong><small>抓取物品可补充少量时间</small>
+            </button>
+          </div>
+
+          <details class="cloud-card">
+            <summary>
+              <span>☁️ 云存档</span>
+              <strong id="cloud-status">正在初始化…</strong>
+            </summary>
+            <p>同步密钥等同于存档密码。复制到自己的其他设备即可加载同一份进度，请勿公开分享。</p>
+            <div class="cloud-actions">
+              <input id="sync-key" type="password" autocomplete="off" aria-label="云存档同步密钥" />
+              <button id="copy-key" type="button">复制密钥</button>
+              <button id="import-key" type="button">导入并同步</button>
+            </div>
+          </details>
+        </section>
+
+        <section id="game-screen" class="game-screen is-hidden" aria-label="游戏区域">
+          <div class="hud panel">
+            <span>模式 <strong id="hud-mode">经典闯关</strong></span>
+            <span>关卡 <strong id="hud-level">1</strong></span>
+            <span>得分 <strong id="hud-score">0</strong></span>
+            <span>目标 <strong id="hud-target">0</strong></span>
+            <span>时间 <strong id="hud-time">0</strong></span>
+            <span>连击 <strong id="hud-combo">×1.00</strong></span>
+            <span>炸药 <strong id="hud-dynamite">0</strong></span>
+          </div>
+          <div id="game-root" class="game-root"></div>
+          <div class="controls panel">
+            <button id="fire-button" class="control-primary" type="button">发射抓钩</button>
+            <button id="dynamite-button" type="button">使用炸药</button>
+            <button id="pause-button" type="button">暂停</button>
+            <button id="exit-button" type="button">返回菜单</button>
+          </div>
+          <p class="control-help">键盘：空格或 ↓ 发射，D 使用炸药，Esc 暂停。点击矿区也可发射。</p>
+        </section>
+      </main>
+
+      <dialog id="result-dialog" class="result-dialog">
+        <p id="result-kicker" class="eyebrow">本轮结算</p>
+        <h2 id="result-title">淘金结束</h2>
+        <p id="result-detail"></p>
+        <div class="dialog-actions">
+          <button id="next-button" class="control-primary" type="button">继续</button>
+          <button id="menu-button" type="button">返回菜单</button>
+        </div>
+      </dialog>
+    </div>
+    <script type="module" src="/src/main.ts"></script>
+  </body>
+</html>

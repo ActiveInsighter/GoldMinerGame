@@ -1,0 +1,43 @@
+name: Run State
+
+on:
+  workflow_run:
+    workflows: [Check, Test, Build, Deploy Worker]
+    types: [completed]
+  workflow_dispatch:
+
+permissions:
+  actions: read
+  contents: write
+
+concurrency:
+  group: run-state
+  cancel-in-progress: false
+
+jobs:
+  record:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v6
+        with:
+          ref: main
+          fetch-depth: 0
+      - uses: actions/setup-node@v6
+        with:
+          node-version: 24
+      - name: Collect recent workflow runs
+        run: node scripts/update-run-state.mjs
+        env:
+          GITHUB_TOKEN: ${{ github.token }}
+      - name: Publish run-state branch
+        run: |
+          git config user.name "github-actions[bot]"
+          git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
+          git checkout -B run-state
+          git add .github/run-state
+          if git diff --cached --quiet; then
+            echo "Run state is unchanged."
+            exit 0
+          fi
+          git commit -m "chore: update recent workflow run state"
+          git push --force origin run-state

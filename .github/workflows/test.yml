@@ -1,0 +1,28 @@
+name: Test
+
+on:
+  push:
+    branches-ignore: [main, run-state]
+    paths-ignore: [".github/run-state/**"]
+  pull_request:
+    branches: [main]
+    paths-ignore: [".github/run-state/**"]
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+concurrency:
+  group: test-${{ github.ref }}
+  cancel-in-progress: true
+
+jobs:
+  test:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v6
+      - uses: actions/setup-node@v6
+        with:
+          node-version: 24
+      - run: npm install --no-audit --no-fund
+      - run: npm test
