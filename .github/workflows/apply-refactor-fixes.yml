@@ -19,7 +19,7 @@ jobs:
         with:
           ref: refactor/phaser-rendering-and-art-pipeline
           fetch-depth: 0
-      - name: Apply exact React harness corrections
+      - name: Apply exact React mount correction
         shell: bash
         run: |
           python <<'PY'
@@ -27,106 +27,38 @@ jobs:
 
           component = Path("src/GoldMinerGame.tsx")
           source = component.read_text()
-
-          icon_import = 'import { GameIcon } from "./components/GameIcon";\n'
-          if icon_import not in source:
-              source = source.replace(
-                  'import { ArtImage } from "./components/ArtImage";\n',
-                  'import { ArtImage } from "./components/ArtImage";\n' + icon_import,
-                  1,
-              )
-
-          visual_constants = '''
-          const VISUAL_PARAMS = new URLSearchParams(window.location.search);
-          const VISUAL_SHOP_PREVIEW =
-            VISUAL_PARAMS.has("visual") &&
-            VISUAL_PARAMS.get("visualScreen") === "shop";
-          const VISUAL_PREVIEW_RUN: RunState = {
-            mode: "campaign",
-            level: 2,
-            wallet: 2_450,
-            totalScore: 1_620,
-            dynamite: 1,
-            inventory: {},
-          };
-          const VISUAL_PREVIEW_SHOP: ShopState = createShopState(
-            VISUAL_PREVIEW_RUN.wallet,
-            VISUAL_PREVIEW_RUN.inventory,
-          );
-          const INITIAL_SCREEN: Screen = VISUAL_SHOP_PREVIEW ? "shop" : "menu";
-          '''.strip()
-          if "const VISUAL_SHOP_PREVIEW" not in source:
-              source = source.replace(
-                  '\nfunction formatCoins',
-                  '\n' + visual_constants + '\n\nfunction formatCoins',
-                  1,
-              )
-
           replacements = [
               (
-                  '  const runRef = useRef<RunState | null>(null);',
-                  '  const runRef = useRef<RunState | null>(\n    VISUAL_SHOP_PREVIEW ? VISUAL_PREVIEW_RUN : null,\n  );',
+                  '  const canvasRef = useRef<HTMLCanvasElement | null>(null);',
+                  '  const gameHostRef = useRef<HTMLDivElement | null>(null);',
               ),
               (
-                  '  const screenRef = useRef<Screen>("menu");',
-                  '  const screenRef = useRef<Screen>(INITIAL_SCREEN);',
+                  '    if (screen !== "game" || !session || !canvasRef.current) return;',
+                  '    if (screen !== "game" || !session || !gameHostRef.current) return;',
               ),
               (
-                  '  const [screen, setScreenState] = useState<Screen>("menu");',
-                  '  const [screen, setScreenState] = useState<Screen>(INITIAL_SCREEN);',
+                  '      canvas: canvasRef.current,',
+                  '      parent: gameHostRef.current,',
               ),
               (
-                  '  const [run, setRunState] = useState<RunState | null>(null);',
-                  '  const [run, setRunState] = useState<RunState | null>(\n    VISUAL_SHOP_PREVIEW ? VISUAL_PREVIEW_RUN : null,\n  );',
-              ),
-              (
-                  '  const [shop, setShop] = useState<ShopState | null>(null);',
-                  '  const [shop, setShop] = useState<ShopState | null>(\n    VISUAL_SHOP_PREVIEW ? VISUAL_PREVIEW_SHOP : null,\n  );',
-              ),
-              (
-                  '<span className="brand-pick">⛏</span>',
-                  '<span className="brand-pick"><GameIcon name="pickaxe" /></span>',
-              ),
-              (
-                  '{settings.muted ? "🔇" : "🔊"}',
-                  '<GameIcon name={settings.muted ? "muted" : "sound"} />',
-              ),
-              (
-                  '<span className="mode-icon">☀</span>',
-                  '<span className="mode-icon"><GameIcon name="daily" /></span>',
-              ),
-              (
-                  '<span className="mode-icon">∞</span>',
-                  '<span className="mode-icon"><GameIcon name="endless" /></span>',
-              ),
-              (
-                  '              <div className="gold-sample sample-a" />\n              <div className="gold-sample sample-b" />\n              <div className="diamond-sample" />\n',
-                  '',
-              ),
-              (
-                  '              <span>⛏</span>\n              <div>',
-                  '              <span><GameIcon name="pickaxe" /></span>\n              <div>',
-              ),
-              (
-                  '              <span>🧨</span>',
-                  '              <span><GameIcon name="dynamite" /></span>',
+                  '            <canvas ref={canvasRef} className="mine-canvas" tabIndex={0} />',
+                  '            <div ref={gameHostRef} className="mine-phaser-host" />',
               ),
           ]
           for old, new in replacements:
               if old in source:
                   source = source.replace(old, new, 1)
-
           component.write_text(source)
           PY
-      - name: Commit corrections
+      - name: Commit correction
         shell: bash
         run: |
           if git diff --quiet -- src/GoldMinerGame.tsx; then
-            echo "Visual harness and icon migration already applied."
+            echo "Phaser mount container already applied."
             exit 0
           fi
           git config user.name "github-actions[bot]"
           git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
           git add src/GoldMinerGame.tsx
-          git commit -m "test: add visual shop harness and unified icons"
+          git commit -m "fix: mount Phaser AUTO renderer in a container"
           git push origin HEAD:refactor/phaser-rendering-and-art-pipeline
