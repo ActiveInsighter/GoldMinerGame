@@ -70,6 +70,42 @@ async function capture(page: Page, name: string): Promise<void> {
   await page.screenshot({ path: path.join(OUTPUT, name), fullPage: true });
 }
 
+async function captureCanvasRegion(
+  page: Page,
+  canvas: Locator,
+  name: string,
+  sourceY: number,
+  sourceHeight: number,
+): Promise<void> {
+  const initialBox = await canvas.boundingBox();
+  if (!initialBox) throw new Error("Asset preview canvas has no bounding box.");
+  const scale = initialBox.width / 1280;
+  const absoluteCanvasTop = await page.evaluate(
+    ({ y }) => window.scrollY + y,
+    { y: initialBox.y },
+  );
+  const topMargin = 48;
+  await page.evaluate(
+    ({ targetY }) => window.scrollTo(0, Math.max(0, targetY)),
+    {
+      targetY: absoluteCanvasTop + sourceY * scale - topMargin,
+    },
+  );
+  await page.waitForTimeout(80);
+
+  const visibleBox = await canvas.boundingBox();
+  if (!visibleBox) throw new Error("Asset preview canvas disappeared after scrolling.");
+  await page.screenshot({
+    path: path.join(OUTPUT, name),
+    clip: {
+      x: visibleBox.x,
+      y: visibleBox.y + sourceY * scale,
+      width: visibleBox.width,
+      height: sourceHeight * scale,
+    },
+  });
+}
+
 async function expectNoHorizontalOverflow(page: Page): Promise<void> {
   const overflow = await page.evaluate(
     () => document.documentElement.scrollWidth - window.innerWidth,
@@ -191,27 +227,21 @@ test("capture direct Phaser rendering and responsive UI", async ({ browser }) =>
   await expectVisibleWithDiagnostics(previewCanvas, assetDiagnostics);
   await assets.waitForTimeout(800);
 
-  const box = await previewCanvas.boundingBox();
-  if (!box) throw new Error("Asset preview canvas has no bounding box.");
-  const scale = box.width / 1280;
-  await assets.screenshot({
-    path: path.join(OUTPUT, "09-miner-animation-preview.png"),
-    clip: {
-      x: box.x,
-      y: box.y + 990 * scale,
-      width: box.width,
-      height: 330 * scale,
-    },
-  });
-  await assets.screenshot({
-    path: path.join(OUTPUT, "10-item-placeholder-preview.png"),
-    clip: {
-      x: box.x,
-      y: box.y + 595 * scale,
-      width: box.width,
-      height: 405 * scale,
-    },
-  });
+  await captureCanvasRegion(
+    assets,
+    previewCanvas,
+    "09-miner-animation-preview.png",
+    990,
+    330,
+  );
+  await captureCanvasRegion(
+    assets,
+    previewCanvas,
+    "10-item-placeholder-preview.png",
+    595,
+    405,
+  );
+  await assets.locator(".asset-preview-react").scrollIntoViewIfNeeded();
   await assets.locator(".asset-preview-react").screenshot({
     path: path.join(OUTPUT, "11-react-art-preview.png"),
   });
