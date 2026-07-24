@@ -1,0 +1,116 @@
+name: Apply Refactor Fixes
+
+on:
+  push:
+    branches: [refactor/phaser-rendering-and-art-pipeline]
+
+permissions:
+  contents: write
+
+concurrency:
+  group: apply-refactor-fixes
+  cancel-in-progress: false
+
+jobs:
+  apply:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v6
+        with:
+          ref: refactor/phaser-rendering-and-art-pipeline
+          fetch-depth: 0
+      - name: Apply exact source corrections
+        shell: bash
+        run: |
+          python <<'PY'
+          from pathlib import Path
+
+          simulation = Path("src/game/simulation/GameSimulation.ts")
+          source = simulation.read_text()
+          replacements = [
+              (
+                  '  SimulationSnapshot,\n} from "./simulationTypes";',
+                  '  SimulationSnapshot,\n  HookState,\n} from "./simulationTypes";',
+              ),
+              (
+                  '  private readonly level;\n  private readonly effects;\n  private readonly mode;',
+                  '  private readonly level: SimulationOptions["level"];\n  private readonly effects: SimulationOptions["effects"];\n  private readonly mode: SimulationOptions["mode"];',
+              ),
+              (
+                  '  private hook = {\n    state: "swinging" as const | "extending" | "retractingEmpty" | "retractingItem" | "destroying",\n    angle: 0,\n    direction: 1 as -1 | 1,\n    length: HookConfig.minimumLength,\n    attachedId: null as string | null,\n    perfect: false,\n    previousX: WORLD_WIDTH / 2,\n    previousY: GROUND_Y + HookConfig.minimumLength,\n  };',
+                  '  private hook: {\n    state: HookState;\n    angle: number;\n    direction: -1 | 1;\n    length: number;\n    attachedId: string | null;\n    perfect: boolean;\n    previousX: number;\n    previousY: number;\n  } = {\n    state: "swinging",\n    angle: 0,\n    direction: 1,\n    length: HookConfig.minimumLength,\n    attachedId: null,\n    perfect: false,\n    previousX: WORLD_WIDTH / 2,\n    previousY: GROUND_Y + HookConfig.minimumLength,\n  };',
+              ),
+              ('    let speed = HookConfig.emptyReturnSpeed;', '    let speed: number = HookConfig.emptyReturnSpeed;'),
+              ('    const speedRange = config.moveSpeedRange;', '    const speedRange = "moveSpeedRange" in config ? config.moveSpeedRange : undefined;'),
+          ]
+          for old, new in replacements:
+              if old in source:
+                  source = source.replace(old, new, 1)
+          simulation.write_text(source)
+
+          component = Path("src/GoldMinerGame.tsx")
+          source = component.read_text()
+          import_anchor = '} from "react";\n'
+          imports = 'import { ArtImage } from "./components/ArtImage";\nimport { ArtAssets } from "./config/artAssets";\n'
+          if imports not in source:
+              source = source.replace(import_anchor, import_anchor + imports, 1)
+          old_portrait = '''function MinerPortrait() {
+            return (
+              <div className="miner-portrait" aria-hidden="true">
+                <div className="portrait-halo" />
+                <div className="miner-hat">
+                  <span />
+                </div>
+                <div className="miner-head">
+                  <i className="miner-ear" />
+                  <i className="miner-nose" />
+                  <i className="miner-eye" />
+                </div>
+                <div className="miner-beard">
+                  <i />
+                  <b />
+                </div>
+                <div className="miner-body" />
+                <div className="miner-arm" />
+                <div className="winch">
+                  <i />
+                  <span />
+                </div>
+                <div className="portrait-rope" />
+                <div className="portrait-hook">J</div>
+              </div>
+            );
+          }'''
+          new_portrait = '''function MinerPortrait() {
+            return (
+              <ArtImage
+                className="menu-art-picture"
+                asset={ArtAssets.menuMinerPortrait}
+                aria-hidden="true"
+              />
+            );
+          }'''
+          if old_portrait in source:
+              source = source.replace(old_portrait, new_portrait, 1)
+          component.write_text(source)
+
+          stylesheet = Path("src/styles/main.css")
+          source = stylesheet.read_text()
+          if ".miner-portrait {" in source and ".visual-caption" in source:
+              start = source.index(".miner-portrait {")
+              end = source.index(".visual-caption", start)
+              source = source[:start] + source[end:]
+          stylesheet.write_text(source)
+          PY
+      - name: Commit corrections
+        shell: bash
+        run: |
+          if git diff --quiet -- src/game/simulation/GameSimulation.ts src/GoldMinerGame.tsx src/styles/main.css; then
+            echo "Verified corrections already applied."
+            exit 0
+          fi
+          git config user.name "github-actions[bot]"
+          git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
+          git add src/game/simulation/GameSimulation.ts src/GoldMinerGame.tsx src/styles/main.css
+          git commit -m "fix: resolve strict types and replace CSS portrait"
+          git push origin HEAD:refactor/phaser-rendering-and-art-pipeline
