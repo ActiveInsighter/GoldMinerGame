@@ -11,6 +11,7 @@ import { Miner } from "../game/objects/Miner";
 import {
   MINER_ANIMATIONS,
   MINER_ANIMATION_STATES,
+  registerMinerAnimations,
 } from "../game/systems/AnimationSystem";
 import { AssetSystem } from "../game/systems/AssetSystem";
 
@@ -34,6 +35,7 @@ class PreviewScene extends Phaser.Scene {
 
   create(): void {
     this.assets.finalize(this);
+    registerMinerAnimations(this);
     this.cameras.main.setBackgroundColor("#2f211a");
     this.add.text(36, 24, "PHASER ART PIPELINE · ASSET PREVIEW", {
       fontFamily: "system-ui, sans-serif",
