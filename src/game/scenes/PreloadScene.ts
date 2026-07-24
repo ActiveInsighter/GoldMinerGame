@@ -1,5 +1,6 @@
 import Phaser from "phaser";
 import { AssetSystem } from "../systems/AssetSystem";
+import { registerMinerAnimations } from "../systems/AnimationSystem";
 
 export class PreloadScene extends Phaser.Scene {
   constructor(
@@ -16,6 +17,7 @@ export class PreloadScene extends Phaser.Scene {
 
   create(): void {
     this.assets.finalize(this);
+    registerMinerAnimations(this);
     this.scene.start(this.nextSceneKey);
   }
 }
