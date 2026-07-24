@@ -1,0 +1,124 @@
+/* Visual layer added after the restored original stylesheet. */
+.game-hud {
+  background:
+    linear-gradient(180deg, rgba(255, 199, 71, 0.24), transparent 42%),
+    linear-gradient(180deg, #d77a20 0%, #a84f18 100%);
+  border-color: #3b2113;
+  box-shadow:
+    inset 0 3px 0 rgba(255, 235, 170, 0.34),
+    0 -4px 20px rgba(38, 20, 12, 0.24);
+}
+
+.game-hud::after {
+  background: repeating-linear-gradient(90deg, #6e351a 0 58px, #3c2114 58px 63px);
+}
+
+.stat-pill {
+  border-color: rgba(255, 239, 199, 0.28);
+  background: rgba(63, 27, 10, 0.34);
+}
+
+.target-meter i {
+  background: #542a16;
+}
+
+.target-meter b {
+  background: linear-gradient(180deg, #fff06f, #e8b420);
+}
+
+.mine-stage {
+  isolation: isolate;
+  background: #8f5f3d;
+}
+
+.mine-canvas {
+  image-rendering: auto;
+}
+
+.mine-stage::before {
+  position: absolute;
+  z-index: 3;
+  inset: 0;
+  content: "";
+  pointer-events: none;
+  box-shadow:
+    inset 0 0 70px rgba(44, 23, 13, 0.22),
+    inset 0 10px 22px rgba(255, 222, 151, 0.12);
+}
+
+.menu-visual {
+  filter: drop-shadow(0 20px 24px rgba(65, 34, 17, 0.2));
+}
+
+.nugget-button {
+  transition: transform 150ms ease, filter 150ms ease, box-shadow 150ms ease;
+}
+
+.nugget-button:hover {
+  filter: saturate(1.08) brightness(1.04);
+}
+
+.phaser-loading {
+  position: relative;
+  display: grid;
+  min-height: 100svh;
+  place-content: center;
+  overflow: hidden;
+  padding: 32px;
+  color: #3c2214;
+  background: linear-gradient(180deg, #f3b443, #c66b27);
+  text-align: center;
+}
+
+.loading-sun {
+  position: absolute;
+  top: -25vw;
+  right: -15vw;
+  width: 70vw;
+  aspect-ratio: 1;
+  border-radius: 50%;
+  background: rgba(255, 234, 137, 0.55);
+}
+
+.loading-nugget {
+  position: relative;
+  display: grid;
+  width: 120px;
+  height: 96px;
+  margin: 0 auto 22px;
+  place-items: center;
+  border: 4px solid #6f430a;
+  border-radius: 47% 56% 50% 43% / 51% 44% 56% 49%;
+  background: #f4bd19;
+  box-shadow: inset 12px 9px 0 rgba(255, 249, 168, 0.68), 0 10px 0 #7a460a;
+  font-size: 2.7rem;
+}
+
+.phaser-loading p,
+.phaser-loading h1,
+.phaser-loading span {
+  position: relative;
+}
+
+.phaser-loading p {
+  margin-bottom: 8px;
+  font-family: Georgia, serif;
+  font-weight: 900;
+  letter-spacing: 0.22em;
+}
+
+.phaser-loading h1 {
+  margin-bottom: 10px;
+  font-family: "STKaiti", "KaiTi", serif;
+  font-size: clamp(2rem, 6vw, 4rem);
+}
+
+.phaser-loading span {
+  color: rgba(60, 34, 20, 0.72);
+}
+
+@media (max-width: 720px) {
+  .game-hud {
+    background: linear-gradient(180deg, #d77a20, #9d4718);
+  }
+}

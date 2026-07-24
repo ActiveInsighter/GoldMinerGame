@@ -1,6 +1,6 @@
 {
   "name": "gold-miner-game",
-  "version": "1.0.0",
+  "version": "1.1.0",
   "private": true,
   "type": "module",
   "engines": {
@@ -8,20 +8,31 @@
   },
   "scripts": {
     "dev": "vite",
-    "dev:worker": "npm run build:client && wrangler dev",
+    "preview": "vite preview",
     "check": "tsc --noEmit",
     "test": "vitest run",
     "test:watch": "vitest",
+    "test:visual": "playwright test && node scripts/montage-visuals.mjs",
     "build:client": "vite build",
     "build:worker": "wrangler deploy --dry-run --outdir .wrangler/dry-run",
     "build": "npm run build:client && npm run build:worker",
     "prepare:deploy": "node scripts/prepare-deploy-config.mjs",
-    "deploy": "npm run prepare:deploy && npm run build:client && wrangler d1 migrations apply DB --remote --config .wrangler.deploy.json && wrangler deploy --config .wrangler.deploy.json"
+    "deploy": "npm run prepare:deploy && npm run build:client && wrangler d1 migrations apply DB --remote --config wrangler.deploy.jsonc && wrangler deploy --config wrangler.deploy.jsonc"
   },
   "dependencies": {
-    "phaser": "4.2.1"
+    "phaser": "4.2.1",
+    "react": "19.2.6",
+    "react-dom": "19.2.6"
   },
   "devDependencies": {
+    "@playwright/test": "1.61.1",
+    "@tailwindcss/postcss": "4.2.1",
+    "@types/node": "22.19.19",
+    "@types/react": "19.2.14",
+    "@types/react-dom": "19.2.3",
+    "@vitejs/plugin-react": "6.0.2",
+    "pngjs": "7.0.0",
+    "tailwindcss": "4.2.1",
     "typescript": "7.0.2",
     "vite": "8.1.5",
     "vitest": "4.1.10",
