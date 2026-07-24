@@ -83,7 +83,7 @@ export interface LevelResult {
 }
 
 export interface EngineOptions {
-  canvas: HTMLCanvasElement;
+  parent: HTMLElement;
   level: LevelConfig;
   items: readonly GeneratedMineItem[];
   effects: LevelItemEffects;
@@ -98,7 +98,11 @@ export interface EngineOptions {
   onAnnouncement?: (message: string) => void;
 }
 
-export type RuntimeMineItemState = "active" | "attached" | "collected" | "destroyed";
+export type RuntimeMineItemState =
+  | "active"
+  | "attached"
+  | "collected"
+  | "destroyed";
 
 export interface RuntimeMineItem extends Omit<GeneratedMineItem, "x" | "y"> {
   x: number;
@@ -150,13 +154,30 @@ export type SimulationEffectKind =
   | "event";
 
 export type SimulationEvent =
-  | { type: "effect"; kind: SimulationEffectKind; x: number; y: number; value?: number }
-  | { type: "floating-text"; x: number; y: number; text: string; color: string; scale?: number }
+  | {
+      type: "effect";
+      kind: SimulationEffectKind;
+      x: number;
+      y: number;
+      value?: number;
+    }
+  | {
+      type: "floating-text";
+      x: number;
+      y: number;
+      text: string;
+      color: string;
+      scale?: number;
+    }
   | { type: "camera-shake"; intensity: number; duration: number }
   | { type: "sound"; name: SoundName }
   | { type: "announcement"; message: string }
   | { type: "item-added"; item: RuntimeMineItem }
-  | { type: "item-removed"; id: string; reason: "collected" | "destroyed" }
+  | {
+      type: "item-removed";
+      id: string;
+      reason: "collected" | "destroyed";
+    }
   | { type: "finished"; result: LevelResult };
 
 export interface SimulationOptions {
