@@ -3,9 +3,11 @@ import { mkdir } from "node:fs/promises";
 import path from "node:path";
 
 const OUTPUT = path.resolve("test-results/visual");
+const FREEZE_MOTION_CSS = "*,*::before,*::after{transition:none!important;animation-duration:0s!important;animation-delay:0s!important}";
 
 async function openMenu(page: Page): Promise<void> {
   await page.goto("/?visual=1", { waitUntil: "domcontentloaded" });
+  await page.addStyleTag({ content: FREEZE_MOTION_CSS });
   await expect(page.locator(".menu-screen")).toBeVisible({ timeout: 15_000 });
 }
 
@@ -21,9 +23,6 @@ async function prepare(page: Page, width: number, height: number): Promise<void>
     };
   });
   await openMenu(page);
-  await page.addStyleTag({
-    content: "*,*::before,*::after{transition:none!important;animation-duration:0s!important;animation-delay:0s!important}",
-  });
 }
 
 async function capture(page: Page, name: string): Promise<void> {
