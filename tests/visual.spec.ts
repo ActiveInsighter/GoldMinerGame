@@ -4,6 +4,11 @@ import path from "node:path";
 
 const OUTPUT = path.resolve("test-results/visual");
 
+async function openMenu(page: Page): Promise<void> {
+  await page.goto("/?visual=1", { waitUntil: "domcontentloaded" });
+  await expect(page.locator(".menu-screen")).toBeVisible({ timeout: 15_000 });
+}
+
 async function prepare(page: Page, width: number, height: number): Promise<void> {
   await page.setViewportSize({ width, height });
   await page.addInitScript(() => {
@@ -15,11 +20,10 @@ async function prepare(page: Page, width: number, height: number): Promise<void>
       return state / 0x1_0000_0000;
     };
   });
-  await page.goto("/?visual=1", { waitUntil: "networkidle" });
+  await openMenu(page);
   await page.addStyleTag({
     content: "*,*::before,*::after{transition:none!important;animation-duration:0s!important;animation-delay:0s!important}",
   });
-  await expect(page.locator(".menu-screen")).toBeVisible({ timeout: 15_000 });
 }
 
 async function capture(page: Page, name: string): Promise<void> {
@@ -44,9 +48,9 @@ test("capture primary desktop and mobile UI", async ({ browser }) => {
   await expect(desktop.getByRole("heading", { name: "卷扬机已停下" })).toBeVisible();
   await capture(desktop, "03-pause-desktop.png");
 
-  await desktop.goto("/?visual=1", { waitUntil: "networkidle" });
-  await expect(desktop.locator(".menu-screen")).toBeVisible();
+  await openMenu(desktop);
   await desktop.getByRole("button", { name: "声音设置" }).click();
+  await expect(desktop.getByRole("heading", { name: "声音设置" })).toBeVisible();
   await capture(desktop, "04-settings-desktop.png");
   await desktop.close();
 
@@ -59,14 +63,14 @@ test("capture primary desktop and mobile UI", async ({ browser }) => {
   await mobile.waitForTimeout(700);
   await capture(mobile, "06-game-mobile.png");
 
-  await mobile.goto("/?visual=1", { waitUntil: "networkidle" });
-  await expect(mobile.locator(".menu-screen")).toBeVisible();
+  await openMenu(mobile);
   await mobile.getByRole("button", { name: "玩法说明" }).click();
+  await expect(mobile.getByRole("heading", { name: "玩法说明" })).toBeVisible();
   await capture(mobile, "07-help-mobile.png");
 
-  await mobile.goto("/?visual=1", { waitUntil: "networkidle" });
-  await expect(mobile.locator(".menu-screen")).toBeVisible();
+  await openMenu(mobile);
   await mobile.getByRole("button", { name: "成就与记录" }).click();
+  await expect(mobile.getByRole("heading", { name: "成就与记录" })).toBeVisible();
   await capture(mobile, "08-achievements-mobile.png");
   await mobile.close();
 });
