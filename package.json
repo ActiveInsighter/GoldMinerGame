@@ -12,7 +12,7 @@
     "check": "tsc --noEmit",
     "test": "vitest run",
     "test:watch": "vitest",
-    "test:visual": "playwright test && node scripts/montage-visuals.mjs",
+    "test:visual": "playwright test; status=$?; node scripts/montage-visuals.mjs || true; exit $status",
     "build:client": "vite build",
     "build:worker": "wrangler deploy --dry-run --outdir .wrangler/dry-run",
     "build": "npm run build:client && npm run build:worker",
