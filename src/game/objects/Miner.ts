@@ -17,7 +17,7 @@ export class Miner extends Phaser.GameObjects.Container {
   private readonly arm: Phaser.GameObjects.Rectangle;
   private readonly winch: Phaser.GameObjects.Arc;
   private readonly status: Phaser.GameObjects.Text;
-  private state: MinerAnimationState | null = null;
+  private animationState: MinerAnimationState | null = null;
   private readonly reducedMotion: boolean;
 
   constructor(scene: Phaser.Scene, x: number, y: number, reducedMotion = false) {
@@ -51,8 +51,8 @@ export class Miner extends Phaser.GameObjects.Container {
   }
 
   playState(next: MinerAnimationState): void {
-    if (this.state === next) return;
-    this.state = next;
+    if (this.animationState === next) return;
+    this.animationState = next;
     this.scene.tweens.killTweensOf([this, this.bodyImage, this.arm, this.winch]);
     this.setScale(1).setAngle(0).setAlpha(1);
     this.bodyImage.clearTint();
