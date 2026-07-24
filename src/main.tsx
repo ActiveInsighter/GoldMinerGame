@@ -10,7 +10,9 @@ import "./styles/art-pipeline.css";
 
 const SEARCH_PARAMS = new URLSearchParams(window.location.search);
 const VISUAL_TEST_MODE = SEARCH_PARAMS.has("visual");
-const ASSET_PREVIEW_MODE = import.meta.env.DEV && SEARCH_PARAMS.get("debug") === "assets";
+const ASSET_PREVIEW_MODE =
+  (import.meta.env.DEV || VISUAL_TEST_MODE) &&
+  SEARCH_PARAMS.get("debug") === "assets";
 
 const INITIAL_STATUS: CloudSyncStatus = {
   label: "正在准备云存档",
