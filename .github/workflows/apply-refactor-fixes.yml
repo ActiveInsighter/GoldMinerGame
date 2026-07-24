@@ -19,7 +19,7 @@ jobs:
         with:
           ref: refactor/phaser-rendering-and-art-pipeline
           fetch-depth: 0
-      - name: Apply exact React mount correction
+      - name: Apply exact Phaser mount correction
         shell: bash
         run: |
           python <<'PY'
@@ -49,16 +49,38 @@ jobs:
               if old in source:
                   source = source.replace(old, new, 1)
           component.write_text(source)
+
+          stylesheet = Path("src/styles/art-pipeline.css")
+          css = stylesheet.read_text()
+          host_rules = '''.mine-phaser-host {
+            position: absolute;
+            inset: 0;
+            display: grid;
+            width: 100%;
+            height: 100%;
+            place-items: center;
+            overflow: hidden;
+          }
+
+          .mine-phaser-host canvas {
+            max-width: 100%;
+            max-height: 100%;
+          }
+
+          '''
+          if ".mine-phaser-host {" not in css:
+              css = css.replace(".mine-canvas {", host_rules + ".mine-canvas {", 1)
+          stylesheet.write_text(css)
           PY
       - name: Commit correction
         shell: bash
         run: |
-          if git diff --quiet -- src/GoldMinerGame.tsx; then
+          if git diff --quiet -- src/GoldMinerGame.tsx src/styles/art-pipeline.css; then
             echo "Phaser mount container already applied."
             exit 0
           fi
           git config user.name "github-actions[bot]"
           git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
-          git add src/GoldMinerGame.tsx
+          git add src/GoldMinerGame.tsx src/styles/art-pipeline.css
           git commit -m "fix: mount Phaser AUTO renderer in a container"
           git push origin HEAD:refactor/phaser-rendering-and-art-pipeline
