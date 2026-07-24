@@ -19,6 +19,7 @@ import { ITEM_CONFIGS } from "../src/game/model";
 import {
   MINER_ANIMATIONS,
   MINER_ANIMATION_STATES,
+  MINER_PLACEHOLDER_FRAMES,
 } from "../src/game/systems/AnimationSystem";
 
 describe("art asset manifest", () => {
@@ -51,6 +52,14 @@ describe("art asset manifest", () => {
       expect(animation.frameRate).toBeGreaterThan(0);
       expect(animation.framePrefix).toContain(state);
     }
+  });
+
+  it("defines unique local frames for each placeholder miner animation", () => {
+    const placeholderFrames = MINER_ANIMATION_STATES.flatMap(
+      (state) => [...MINER_PLACEHOLDER_FRAMES[state]],
+    );
+    expect(placeholderFrames).toHaveLength(MINER_ANIMATION_STATES.length * 2);
+    expect(new Set(placeholderFrames).size).toBe(placeholderFrames.length);
   });
 
   it("maps every configured mine item to a distinguishable texture key", () => {
