@@ -6,7 +6,7 @@ export class AssetSystem {
   private readonly failed = new Set<string>();
 
   queue(scene: Phaser.Scene): void {
-    scene.load.on(Phaser.Loader.Events.LOAD_ERROR, (file: Phaser.Loader.File) => {
+    scene.load.on(Phaser.Loader.Events.FILE_LOAD_ERROR, (file: Phaser.Loader.File) => {
       this.failed.add(file.key);
       if (import.meta.env.DEV) {
         console.warn(`[assets] Failed to load ${file.key}; the local placeholder will be used.`);
