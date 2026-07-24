@@ -7,6 +7,8 @@ const ICONS = {
   cloud: "☁",
   pause: "Ⅱ",
   dynamite: "!",
+  daily: "☀",
+  endless: "∞",
   help: "?",
   achievement: "★",
   settings: "⚙",
@@ -14,9 +16,19 @@ const ICONS = {
 
 export type GameIconName = keyof typeof ICONS;
 
-export function GameIcon({ name, label }: { name: GameIconName; label?: string }): ReactNode {
+export function GameIcon({
+  name,
+  label,
+}: {
+  name: GameIconName;
+  label?: string;
+}): ReactNode {
   return (
-    <span className={`game-icon game-icon-${name}`} aria-hidden={label ? undefined : true} aria-label={label}>
+    <span
+      className={`game-icon game-icon-${name}`}
+      aria-hidden={label ? undefined : true}
+      aria-label={label}
+    >
       {ICONS[name]}
     </span>
   );
