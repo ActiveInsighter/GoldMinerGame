@@ -1,0 +1,182 @@
+.cloud-sync-dock {
+  position: fixed;
+  z-index: 80;
+  right: max(14px, env(safe-area-inset-right));
+  bottom: max(14px, env(safe-area-inset-bottom));
+  display: flex;
+  max-width: min(310px, calc(100vw - 28px));
+  align-items: center;
+  gap: 10px;
+  padding: 10px 14px 10px 11px;
+  color: #fff0c9;
+  border: 2px solid rgba(34, 20, 13, 0.9);
+  border-radius: 13px;
+  background: rgba(63, 36, 23, 0.94);
+  box-shadow: inset 0 2px 0 rgba(255, 232, 179, 0.14), 0 7px 22px rgba(28, 14, 8, 0.32);
+  backdrop-filter: blur(8px);
+  cursor: pointer;
+  transition: width 160ms ease, opacity 160ms ease, transform 160ms ease;
+}
+
+.cloud-sync-dock:hover {
+  transform: translateY(-2px);
+}
+
+.cloud-sync-dock > span:first-child {
+  display: grid;
+  width: 34px;
+  height: 34px;
+  flex: 0 0 auto;
+  place-items: center;
+  border-radius: 50%;
+  background: #2d8f85;
+  font-size: 1.05rem;
+}
+
+.cloud-sync-dock > span:last-child {
+  display: flex;
+  min-width: 0;
+  flex-direction: column;
+  align-items: flex-start;
+}
+
+.cloud-sync-dock strong,
+.cloud-sync-dock small {
+  max-width: 230px;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.cloud-sync-dock strong {
+  font-size: 0.78rem;
+}
+
+.cloud-sync-dock small {
+  margin-top: 2px;
+  color: #d2b991;
+  font-size: 0.61rem;
+}
+
+.cloud-busy > span:first-child { background: #c28224; }
+.cloud-offline > span:first-child { background: #896f5e; }
+.cloud-error > span:first-child { background: #b54c38; }
+
+/* During a round the cloud state becomes a compact status seal so it never
+   obscures the mine, dynamite control or touch input. */
+body:has(.game-screen) .cloud-sync-dock {
+  width: 46px;
+  height: 46px;
+  padding: 4px;
+  border-radius: 50%;
+  opacity: 0.76;
+}
+
+body:has(.game-screen) .cloud-sync-dock:hover,
+body:has(.game-screen) .cloud-sync-dock:focus-visible {
+  opacity: 1;
+}
+
+body:has(.game-screen) .cloud-sync-dock > span:first-child {
+  width: 34px;
+  height: 34px;
+}
+
+body:has(.game-screen) .cloud-sync-dock > span:last-child {
+  display: none;
+}
+
+.cloud-sync-dialog {
+  width: min(520px, calc(100vw - 28px));
+  padding: 30px;
+  color: #342014;
+  border: 3px solid #382116;
+  border-radius: 18px;
+  background: #f5dfb4;
+  box-shadow: 0 25px 90px rgba(31, 15, 8, 0.55);
+}
+
+.cloud-sync-dialog::backdrop {
+  background: rgba(29, 16, 10, 0.72);
+  backdrop-filter: blur(6px);
+}
+
+.cloud-dialog-close {
+  position: absolute;
+  top: 12px;
+  right: 12px;
+  width: 36px;
+  height: 36px;
+  border: 2px solid rgba(54, 31, 18, 0.45);
+  border-radius: 50%;
+  background: rgba(255, 246, 218, 0.62);
+  cursor: pointer;
+}
+
+.cloud-dialog-kicker {
+  margin: 0 0 7px;
+  color: #824521;
+  font-family: Georgia, serif;
+  font-size: 0.68rem;
+  font-weight: 900;
+  letter-spacing: 0.2em;
+}
+
+.cloud-sync-dialog h2 {
+  margin: 0 0 10px;
+  font-family: "STKaiti", "KaiTi", serif;
+  font-size: 2rem;
+}
+
+.cloud-sync-dialog > p:not(.cloud-dialog-kicker) {
+  color: rgba(52, 32, 20, 0.72);
+  line-height: 1.7;
+}
+
+.cloud-sync-dialog label {
+  display: grid;
+  gap: 7px;
+  margin-top: 20px;
+  font-weight: 800;
+}
+
+.cloud-sync-dialog input {
+  width: 100%;
+  padding: 12px 13px;
+  color: #2d1c13;
+  border: 2px solid #7f5736;
+  border-radius: 9px;
+  background: #fff2d2;
+}
+
+.cloud-dialog-actions {
+  display: grid;
+  grid-template-columns: repeat(3, 1fr);
+  gap: 9px;
+  margin-top: 18px;
+}
+
+.cloud-dialog-actions button {
+  min-height: 44px;
+  padding: 8px 10px;
+  color: #fff0cc;
+  border: 2px solid #382116;
+  border-radius: 9px;
+  background: #674027;
+  font-weight: 800;
+  cursor: pointer;
+}
+
+.cloud-dialog-actions .primary {
+  color: #35200f;
+  background: #efb629;
+}
+
+@media (max-width: 620px) {
+  .cloud-sync-dock {
+    max-width: 210px;
+    padding: 8px 10px;
+  }
+  .cloud-sync-dock small { display: none; }
+  .cloud-dialog-actions { grid-template-columns: 1fr; }
+}

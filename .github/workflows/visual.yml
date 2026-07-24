@@ -1,0 +1,37 @@
+name: Visual
+
+on:
+  push:
+    branches-ignore: [run-state, visual-state]
+    paths-ignore: [".github/run-state/**"]
+  pull_request:
+    branches: [main]
+    paths-ignore: [".github/run-state/**"]
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+concurrency:
+  group: visual-${{ github.ref }}
+  cancel-in-progress: true
+
+jobs:
+  visual:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v6
+      - uses: actions/setup-node@v6
+        with:
+          node-version: 24
+      - run: npm install --no-audit --no-fund
+      - run: npx playwright install --with-deps chromium
+      - run: npm run test:visual
+      - name: Upload visual UI report
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: visual-ui-${{ github.run_id }}
+          path: test-results/visual
+          if-no-files-found: warn
+          retention-days: 14
