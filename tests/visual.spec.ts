@@ -1,8 +1,10 @@
 import { expect, test, type Locator, type Page } from "@playwright/test";
-import { mkdir } from "node:fs/promises";
+import { mkdir, writeFile } from "node:fs/promises";
 import path from "node:path";
+import { PNG } from "pngjs";
 
 const OUTPUT = path.resolve("test-results/visual");
+const PREVIEW_HEIGHT = 1500;
 const FREEZE_MOTION_CSS =
   "*,*::before,*::after{transition:none!important;animation-duration:0s!important;animation-delay:0s!important}";
 
@@ -71,39 +73,22 @@ async function capture(page: Page, name: string): Promise<void> {
 }
 
 async function captureCanvasRegion(
-  page: Page,
   canvas: Locator,
   name: string,
   sourceY: number,
   sourceHeight: number,
 ): Promise<void> {
-  const initialBox = await canvas.boundingBox();
-  if (!initialBox) throw new Error("Asset preview canvas has no bounding box.");
-  const scale = initialBox.width / 1280;
-  const absoluteCanvasTop = await page.evaluate(
-    ({ y }) => window.scrollY + y,
-    { y: initialBox.y },
+  const screenshot = await canvas.screenshot();
+  const source = PNG.sync.read(screenshot);
+  const scale = source.height / PREVIEW_HEIGHT;
+  const y = Math.max(0, Math.round(sourceY * scale));
+  const height = Math.min(
+    source.height - y,
+    Math.max(1, Math.round(sourceHeight * scale)),
   );
-  const topMargin = 48;
-  await page.evaluate(
-    ({ targetY }) => window.scrollTo(0, Math.max(0, targetY)),
-    {
-      targetY: absoluteCanvasTop + sourceY * scale - topMargin,
-    },
-  );
-  await page.waitForTimeout(80);
-
-  const visibleBox = await canvas.boundingBox();
-  if (!visibleBox) throw new Error("Asset preview canvas disappeared after scrolling.");
-  await page.screenshot({
-    path: path.join(OUTPUT, name),
-    clip: {
-      x: visibleBox.x,
-      y: visibleBox.y + sourceY * scale,
-      width: visibleBox.width,
-      height: sourceHeight * scale,
-    },
-  });
+  const cropped = new PNG({ width: source.width, height });
+  PNG.bitblt(source, cropped, 0, y, source.width, height, 0, 0);
+  await writeFile(path.join(OUTPUT, name), PNG.sync.write(cropped));
 }
 
 async function expectNoHorizontalOverflow(page: Page): Promise<void> {
@@ -228,14 +213,12 @@ test("capture direct Phaser rendering and responsive UI", async ({ browser }) =>
   await assets.waitForTimeout(800);
 
   await captureCanvasRegion(
-    assets,
     previewCanvas,
     "09-miner-animation-preview.png",
     990,
     330,
   );
   await captureCanvasRegion(
-    assets,
     previewCanvas,
     "10-item-placeholder-preview.png",
     595,
