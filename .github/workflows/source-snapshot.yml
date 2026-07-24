@@ -3,6 +3,8 @@ name: Source Snapshot
 on:
   push:
     branches: [refactor/phaser-rendering-and-art-pipeline]
+  pull_request:
+    branches: [main]
   workflow_dispatch:
 
 permissions:
