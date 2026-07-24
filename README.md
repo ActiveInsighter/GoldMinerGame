@@ -1,36 +1,40 @@
 # 黄金矿工：西部淘金记
 
-一款可直接在浏览器中游玩的原创黄金矿工游戏。项目使用 React + TypeScript + Canvas 2D 构建，支持桌面键盘、鼠标与手机触屏操作，并针对 ChatGPT Sites / Cloudflare Workers 运行环境完成适配。
+经典黄金矿工浏览器游戏，现已迁移为 **Vite + TypeScript + Phaser 4**。生产环境由单个 Cloudflare Worker 提供静态资源与云存档 API，D1 保存跨设备进度，不再依赖 ChatGPT Sites、Next.js、Vinext 或 React。
 
-## 已实现内容
+## 技术栈
 
-- 自动左右摆动、发射、空钩返回、携物返回与爆破状态
-- 基于 `requestAnimationFrame` 和时间差的游戏循环
-- 高速抓钩扫掠碰撞，避免小型钻石被穿透
-- 10 个配置化关卡，以及钻石、地鼠、炸药和极速特殊关卡
-- 小/中/大金块、钻石、岩石、宝箱、炸药桶、地鼠、钻石地鼠
-- 物品重量、价值和回收速度差异
-- 目标金额、倒计时、成功/失败结算
-- 连击倍率、完美抓取、粒子与得分动画
-- 地下震动、宝石雨、双倍金币、地鼠暴走、塌陷、时间冻结
-- 7 种可实际生效的商店道具
-- 每日固定种子挑战与无尽模式
-- 成就、历史记录、继续进度和音频设置本地保存
-- Web Audio API 合成背景音乐与游戏音效
-- 桌面、手机横屏和触屏按钮适配
+- Vite 8：前端开发与生产构建
+- TypeScript 7：严格类型检查
+- Phaser 4：场景、输入、渲染、补间与游戏循环
+- Cloudflare Workers Static Assets：分发 Vite 构建产物
+- Cloudflare D1：匿名跨设备云存档
+- Vitest：纯逻辑与 Worker API 单元测试
+- GitHub Actions：独立检查、测试、构建，以及 main 分支自动部署
 
-## 操作
+## 项目结构
 
-| 操作 | 键盘 / 鼠标 | 触屏 |
-| --- | --- | --- |
-| 发射抓钩 | `Space`、`↓` 或点击矿区 | 点击矿区 |
-| 使用炸药 | `D` 或爆破按钮 | 爆破按钮 |
-| 暂停 / 继续 | `Esc` 或暂停按钮 | 暂停按钮 |
-| 地鼠关移动 | `←` / `→` | — |
+```text
+src/
+├─ main.ts                    # DOM 外壳、模式切换、存档与 Phaser 启动
+├─ styles/main.css            # 响应式界面
+├─ game/
+│  ├─ GoldMinerScene.ts       # Phaser 场景、抓钩状态机、碰撞与绘制
+│  ├─ model.ts                # 确定性关卡、物品、商店和计分纯逻辑
+│  └─ storage.ts              # 版本化 localStorage 本地存档
+├─ cloud/
+│  ├─ identity.ts             # 匿名同步身份与可迁移同步密钥
+│  └─ CloudSaveClient.ts      # 云存档读取、写入与冲突处理
+└─ worker/
+   ├─ index.ts                # Worker 入口和静态资源回退
+   ├─ save-api.ts             # D1 云存档 API
+   └─ types.ts                # Worker/D1 最小运行时类型
+migrations/                   # D1 数据库迁移
+scripts/                      # 部署配置与 Actions run 状态采集
+.github/workflows/            # Check / Test / Build / Deploy / Run State
+```
 
-抓钩只有在摆动状态才能再次发射。炸药仅在抓钩携带物品返回时可用。
-
-## 本地运行
+## 本地开发
 
 需要 Node.js 22.13 或更高版本。
 
@@ -39,53 +43,55 @@ npm install
 npm run dev
 ```
 
-默认开发地址为 `http://localhost:3000`。
-
-## 构建与测试
+完整 Worker + 本地 D1 预览：
 
 ```bash
-npm run lint
-npm run build
+npm run build:client
+npx wrangler d1 migrations apply DB --local
+npx wrangler dev
+```
+
+质量命令：
+
+```bash
+npm run check
 npm test
+npm run build
 ```
 
-测试覆盖每日挑战确定性、物品生成间距、重量与拉取速度、连击倍率、商店防重复扣款，以及生产页面服务端渲染。
+## 云存档
 
-## 项目结构
+首次打开游戏时，浏览器会生成随机 `playerId` 和高强度随机令牌。客户端只保存同步密钥；Worker 在 D1 中只保存令牌的 SHA-256 哈希，不保存明文令牌。
 
-```text
-app/
-├─ GoldMinerGame.tsx      # React 菜单、HUD、商店、结算、记录与设置
-├─ game/
-│  ├─ engine.ts           # Canvas 游戏循环、抓钩状态机、碰撞与绘制
-│  ├─ model.ts            # 物品/关卡/商店/成就配置与纯逻辑
-│  ├─ audio.ts            # Web Audio 合成音乐与音效
-│  └─ storage.ts          # 版本化 localStorage 存档
-├─ globals.css            # 西部矿场视觉与响应式样式
-├─ layout.tsx             # 页面元数据与社交预览
-└─ page.tsx               # 站点入口
-tests/
-├─ game-model.test.mjs
-└─ rendered-html.test.mjs
-```
+- `GET /api/save/:playerId`：读取云存档
+- `PUT /api/save/:playerId`：写入云存档
+- `GET /api/health`：服务健康检查
 
-## 主要机制
+写入采用 revision 乐观并发控制，旧设备覆盖新存档时会返回 `409` 和最新版本。同步密钥等同于存档密码，不能公开分享。
 
-抓钩端点按当前角度与绳长计算：
+## 分支与自动部署流程
 
-```text
-x = originX + length × sin(angle)
-y = originY + length × cos(angle)
-```
+1. 在功能分支修改代码。
+2. 分支 push 和针对 `main` 的 Pull Request 会分别触发三个独立工作流：`Check`、`Test`、`Build`。
+3. 三项通过后合并到 `main`。
+4. `main` 的 push 触发 `Deploy Worker`，再次执行检查、测试、构建，然后自动创建或复用名为 `gold-miner-saves` 的 D1 数据库、执行迁移并部署 Worker。
+5. `Run State` 在上述工作流完成后自动整理最近 12 次 run，发布到独立的 `run-state` 分支：
+   - `.github/run-state/latest-run-id.txt`
+   - `.github/run-state/latest-run.json`
+   - `.github/run-state/recent-runs.json`
 
-携物回收速度按重量衰减并设置最低速度，确保重物有重量感但不会长时间卡住。碰撞使用上一帧到当前帧的钩尖线段与物品圆形碰撞区求交；多个命中对象只抓取路径上最靠前的一个。
+因此可先读取 `run-state` 分支获得 run ID 与状态，再按 ID 检查 jobs 和日志。
 
-关卡、商店和成就均由数据对象管理。高频位置和碰撞状态保留在 Canvas 引擎中，React 仅以节流后的 HUD 快照更新界面。
+## GitHub 仓库密钥
 
-## 数据与隐私
+在仓库 `Settings → Secrets and variables → Actions` 中配置：
 
-所有进度保存在浏览器 `localStorage`，不依赖账号或远程服务器。存档带版本号，并对损坏数据、旧版本和异常数值做容错。可在“声音与本地数据”页面恢复默认设置并清除记录。
+- `CLOUDFLARE_ACCOUNT_ID`：Cloudflare Account ID
+- `CLOUDFLARE_API_TOKEN`：限定到目标账号的 API Token
 
-## 部署
+API Token 至少需要：
 
-生产构建由 Vinext 输出为 Cloudflare Worker 兼容格式，可直接通过 ChatGPT Sites 发布。项目不依赖付费 API 或第三方密钥。
+- Account / Workers Scripts / Edit
+- Account / D1 / Edit
+
+部署脚本会通过 Cloudflare API 自动查找或创建 D1，因此不需要额外配置 D1 database ID。可选环境变量 `CLOUDFLARE_D1_DATABASE_NAME` 能覆盖默认数据库名，但正常部署不需要设置。
