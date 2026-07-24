@@ -1,50 +1,106 @@
 # 黄金矿工：西部淘金记
 
-经典黄金矿工浏览器游戏，使用 **Vite + TypeScript + Phaser 4** 构建。生产环境由单个 Cloudflare Worker 提供静态资源和云存档 API，D1 保存跨设备进度。
+经典黄金矿工浏览器游戏，使用 **Vite + TypeScript + Phaser 4 + React** 构建。生产环境由单个 Cloudflare Worker 提供静态资源和云存档 API，D1 保存跨设备进度。
 
-当前版本在保留现代部署架构的同时，恢复了原版完整玩法和西部卡通视觉：精细矿层、异形金块、切面钻石、岩石、宝箱、TNT、移动地鼠、粒子、爆炸、屏幕震动、随机矿脉事件、商店、成就、每日挑战、无尽模式和合成音频。
+当前架构保留经典闯关、每日挑战、无尽模式、商店、成就、本地存档、云存档、随机矿脉事件和音频功能，同时将实时玩法模拟与画面渲染彻底分离。正式美术尚未完成时，游戏通过本地原创占位纹理正常运行；后续可按 Manifest 替换 PNG、WebP、Sprite Sheet 或 Phaser Atlas，而不改动游戏规则代码。
 
 ## 技术栈
 
 - Vite 8：前端开发与生产构建
 - TypeScript 7：严格类型检查
-- Phaser 4：可见游戏画布、场景生命周期、缩放和输入宿主
-- React 19：菜单、HUD、商店、结算、设置和无障碍界面
+- Phaser 4：矿区、人物、抓钩、物品、粒子、相机和场景生命周期
+- React 19：菜单、HUD、商店、结算、设置、云存档入口和无障碍界面
 - Cloudflare Workers Static Assets：分发 Vite 构建产物
 - Cloudflare D1：匿名跨设备云存档
-- Vitest：纯逻辑与 Worker API 单元测试
-- Playwright：桌面端和移动端视觉测试
+- Vitest：纯模拟、资源清单、模型和 Worker API 单元测试
+- Playwright：桌面端、移动端和资源预览视觉测试
 - GitHub Actions：检查、测试、构建、视觉截图和生产部署
+
+## 运行时架构
+
+```text
+React 页面、弹窗和低频 HUD
+        │ 命令 / HudSnapshot
+        ▼
+GoldMinerEngine 公开控制接口
+        ▼
+BootScene → PreloadScene → GameScene
+                            │
+                            ├─ BackgroundLayers
+                            ├─ Miner（唯一权威人物对象）
+                            ├─ Rope + Hook
+                            ├─ MineItemView
+                            └─ EffectsSystem
+        ▲
+        │ SimulationSnapshot / SimulationEvent
+        │
+GameSimulation（单一游戏状态真相）
+        ▼
+model.ts（关卡、生成、重量、计分、连击、商店、成就）
+```
+
+`GameSimulation` 是纯 TypeScript，不依赖 React、Phaser、DOM 或 Canvas。Phaser Scene 直接创建并更新 Sprite、Image、Container、Graphics 和 Particle Emitter；不再把隐藏 Canvas 每帧上传成 `CanvasTexture`。渲染器使用 `Phaser.AUTO`，优先 WebGL，并在必要时回退到 Canvas。
 
 ## 项目结构
 
 ```text
 src/
-├─ main.tsx                    # 应用入口与云存档状态入口
-├─ GoldMinerGame.tsx           # 菜单、HUD、商店、结算、记录与设置
+├─ main.tsx                         # 应用入口、云存档与调试路由
+├─ GoldMinerGame.tsx                # React 菜单、HUD、商店、结算与设置
+├─ components/
+│  ├─ ArtImage.tsx                  # React 图片与本地回退
+│  └─ GameIcon.tsx                  # 统一图标占位组件
+├─ config/artAssets.ts              # React 侧正式资源路径
+├─ debug/AssetPreview.tsx           # 开发/视觉测试资源预览页
 ├─ styles/
-│  ├─ main.css                 # 完整西部卡通视觉系统
-│  ├─ phaser-polish.css        # Phaser 画面与 HUD 增强
-│  └─ cloud-sync.css           # 云存档入口与密钥对话框
+│  ├─ main.css
+│  ├─ phaser-polish.css
+│  ├─ art-pipeline.css
+│  └─ cloud-sync.css
 ├─ game/
-│  ├─ engine.ts                # Phaser 4 场景宿主与运行时桥接
-│  ├─ canvas-runtime.ts        # 完整玩法、碰撞、事件和程序化美术
-│  ├─ audio.ts                 # Web Audio 音乐与音效
-│  ├─ model.ts                 # 关卡、物品、商店、成就和计分逻辑
-│  └─ storage.ts               # 版本化 localStorage 存档
-├─ cloud/
-│  ├─ identity.ts              # 匿名同步身份与可迁移同步密钥
-│  ├─ CloudSaveClient.ts       # 云存档 API 客户端
-│  └─ sync.ts                  # 本地与 D1 自动同步及冲突处理
-└─ worker/
-   ├─ index.ts                 # Worker 入口和静态资源回退
-   ├─ save-api.ts              # D1 云存档 API
-   └─ types.ts                 # Worker/D1 最小运行时类型
-migrations/                    # D1 数据库迁移
-scripts/                       # 部署、run 状态和视觉拼图脚本
-tests/                         # 单元测试与 Playwright 视觉测试
-.github/workflows/             # Check / Test / Build / Visual / Deploy / Run State
+│  ├─ config/                       # 世界尺寸、资源 Key、视觉层级
+│  ├─ assets/                       # 运行时 Manifest 与占位纹理生成
+│  ├─ simulation/                   # 纯游戏模拟和事件
+│  ├─ scenes/                       # Boot / Preload / Game Scene
+│  ├─ objects/                      # Miner / Hook / Rope / MineItem / Background
+│  ├─ systems/                      # Asset / Animation / Effects / Event Bus
+│  ├─ engine.ts                     # React 可调用的 Phaser 控制器
+│  ├─ canvas-runtime.ts             # 旧导入兼容层，不再进行 Canvas 绘制
+│  ├─ audio.ts                      # Web Audio 音乐与音效
+│  ├─ model.ts                      # 关卡、物品、商店、成就和计分逻辑
+│  └─ storage.ts                    # 版本化 localStorage 存档
+├─ cloud/                           # 匿名身份、客户端和同步逻辑
+└─ worker/                          # Worker、D1 云存档 API 与类型
+
+public/assets/placeholders/          # 提交到仓库的本地占位图片
+art-manifest.json                    # 正式美术规格和替换目标
+ASSET_TODO.md                        # P0 / P1 人工美术待办
+docs/ARCHITECTURE.md                 # 详细职责和生命周期
+docs/ART_PIPELINE.md                 # 美术制作、Atlas、九宫格和压缩流程
+migrations/                          # D1 数据库迁移
+scripts/                             # 部署、run 状态和视觉拼图脚本
+tests/                               # Vitest 与 Playwright 测试
+.github/workflows/                   # Check / Test / Build / Visual / Deploy / Run State
 ```
+
+## 美术资源与回退
+
+业务代码只引用 `src/game/config/assetKeys.ts` 中的 Key。纹理尺寸、Origin、缩放和 fallbackKey 记录在 `src/game/assets/assetManifest.ts`；未来正式交付规格记录在根目录 `art-manifest.json`。
+
+```text
+正式文件已配置且加载成功 → 使用正式纹理
+正式文件未配置或加载失败 → 使用本地占位纹理
+```
+
+占位纹理由 `createPlaceholderTextures.ts` 在预加载阶段集中生成一次。Scene 不包含大型占位绘图方法，也不会每帧生成纹理。React 首页人物使用 `ArtImage` 和 `public/assets/placeholders/menu/miner-portrait-placeholder.svg`，不再依靠复杂 CSS 几何拼接。
+
+开发环境可访问：
+
+```text
+http://localhost:5173/?debug=assets
+```
+
+资源预览页展示背景层、全部物品、人物动画状态、粒子、React UI 图片、实际纹理尺寸、帧率、Origin、缩放及正式/占位状态。生产界面不会启用该路由；视觉测试通过 `visual=1` 显式开放。
 
 ## 本地开发
 
@@ -69,16 +125,16 @@ npx wrangler dev
 npm run check
 npm test
 npm run build
+npm run test:visual
 ```
 
 首次运行视觉测试前安装 Chromium：
 
 ```bash
 npx playwright install chromium
-npm run test:visual
 ```
 
-视觉测试会自动截取桌面和移动端主要界面，保存到 `test-results/visual/`，并按照每 4 张截图生成一张 `contact-sheet-*.png` 拼图。GitHub Actions 的 `Visual` 工作流会上传完整目录，方便在合并和部署前直接检查实际 UI。
+视觉测试会截取桌面首页、游戏、暂停、商店，移动首页、游戏、暂停、商店，以及人物动画、物品纹理和 React 占位图片预览。结果保存到 `test-results/visual/`，并按照每 4 张截图生成一张 `contact-sheet-*.png` 拼图。测试还会检查页面异常、控制台错误、资源 404、Canvas 实际尺寸和横向溢出。`visualScreen=shop` 等直达参数只在同时存在 `visual=1` 时生效，不会改变正常生产流程。
 
 ## 云存档
 
@@ -94,7 +150,7 @@ npm run test:visual
 
 1. 在功能分支修改代码。
 2. 分支 push 和针对 `main` 的 Pull Request 会触发 `Check`、`Test`、`Build` 和 `Visual`。
-3. `Visual` 自动生成 8 张主要界面截图，并每 4 张拼成一张检查图上传为 Actions artifact。
+3. `Visual` 生成主要界面截图、资源预览和每 4 张一组的拼图，并上传 Actions artifact。
 4. 全部通过后合并到 `main`。
 5. `main` 的 push 触发 `Deploy Worker`，再次执行检查、测试、构建，然后自动创建或复用名为 `gold-miner-saves` 的 D1 数据库、执行迁移并部署 Worker。
 6. `Run State` 自动整理最近的检查、测试、构建、视觉和部署 run，发布到独立的 `run-state` 分支：

@@ -1,0 +1,240 @@
+:root {
+  --art-button-texture: none;
+  --art-paper-panel-texture: none;
+  --art-wood-panel-texture: none;
+  --game-safe-area-top: env(safe-area-inset-top, 0px);
+  --game-safe-area-right: env(safe-area-inset-right, 0px);
+  --game-safe-area-bottom: env(safe-area-inset-bottom, 0px);
+  --game-safe-area-left: env(safe-area-inset-left, 0px);
+}
+
+/* Legacy CSS-drawn portrait is visually retired. The component is progressively
+   replaced by ArtImage; this fallback prevents the old geometry from appearing
+   while keeping older saved builds usable. */
+.miner-portrait {
+  position: relative;
+  display: block;
+  width: min(100%, 520px);
+  aspect-ratio: 8 / 9;
+  overflow: hidden;
+  border-radius: 32px;
+  background: url("/assets/placeholders/menu/miner-portrait-placeholder.svg") center / contain no-repeat;
+  filter: drop-shadow(0 24px 26px rgba(65, 34, 17, 0.22));
+}
+
+.miner-portrait > *,
+.miner-portrait::before,
+.miner-portrait::after {
+  display: none !important;
+  content: none !important;
+}
+
+.menu-art-picture {
+  display: block;
+  width: min(100%, 520px);
+  margin-inline: auto;
+}
+
+.menu-art-picture img {
+  display: block;
+  width: 100%;
+  height: auto;
+  object-fit: contain;
+  filter: drop-shadow(0 24px 26px rgba(65, 34, 17, 0.22));
+}
+
+.game-icon {
+  display: inline-grid;
+  min-width: 1.2em;
+  place-items: center;
+  font-family: ui-monospace, "Cascadia Mono", monospace;
+  font-weight: 900;
+  line-height: 1;
+}
+
+.nugget-button,
+.continue-button,
+.paper-panel,
+.wood-panel {
+  background-image: var(--art-button-texture), var(--art-paper-panel-texture), var(--art-wood-panel-texture);
+  background-repeat: no-repeat;
+  background-position: center;
+  background-size: 100% 100%;
+}
+
+.mine-stage {
+  position: relative;
+  width: 100%;
+  max-width: 1280px;
+  aspect-ratio: 16 / 9;
+  min-height: 0;
+  margin-inline: auto;
+  overflow: hidden;
+  contain: layout paint;
+}
+
+.mine-phaser-host {
+  position: absolute;
+  inset: 0;
+  display: grid;
+  width: 100%;
+  height: 100%;
+  place-items: center;
+  overflow: hidden;
+}
+
+.mine-phaser-host canvas {
+  max-width: 100%;
+  max-height: 100%;
+}
+
+.mine-canvas {
+  display: block !important;
+  width: 100% !important;
+  height: 100% !important;
+  max-width: 100%;
+  aspect-ratio: 16 / 9;
+  object-fit: contain;
+  touch-action: none;
+  user-select: none;
+  -webkit-user-select: none;
+}
+
+.asset-preview-page {
+  min-height: 100svh;
+  padding: 24px clamp(16px, 4vw, 56px) 64px;
+  overflow-x: hidden;
+  color: #fff0c9;
+  background: #201610;
+}
+
+.asset-preview-page > header {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: end;
+  gap: 10px 24px;
+  max-width: 1280px;
+  margin: 0 auto 24px;
+}
+
+.asset-preview-page > header p {
+  width: 100%;
+  margin: 0;
+  color: #efb65e;
+  font-weight: 900;
+  letter-spacing: 0.18em;
+}
+
+.asset-preview-page > header h1 {
+  flex: 1;
+  margin: 0;
+  font-size: clamp(2rem, 5vw, 4rem);
+}
+
+.asset-preview-page > header a {
+  color: #fff0c9;
+}
+
+.asset-preview-react {
+  display: grid;
+  grid-template-columns: minmax(220px, 360px) minmax(0, 1fr);
+  gap: 24px;
+  max-width: 1280px;
+  margin: 0 auto 24px;
+}
+
+.asset-preview-react > div {
+  min-width: 0;
+  padding: 20px;
+  border: 1px solid rgba(255, 225, 165, 0.25);
+  border-radius: 18px;
+  background: rgba(255, 255, 255, 0.04);
+}
+
+.asset-preview-react picture,
+.asset-preview-react img {
+  display: block;
+  width: 100%;
+  max-height: 420px;
+  object-fit: contain;
+}
+
+.asset-preview-react code {
+  display: block;
+  max-width: 100%;
+  overflow-wrap: anywhere;
+  color: #f5ca78;
+}
+
+.asset-preview-canvas {
+  width: min(100%, 1280px);
+  margin-inline: auto;
+  overflow: hidden;
+  border: 1px solid rgba(255, 225, 165, 0.22);
+  border-radius: 18px;
+  background: #2f211a;
+}
+
+.asset-preview-canvas canvas {
+  display: block;
+  width: 100% !important;
+  height: auto !important;
+}
+
+@media (max-width: 720px) {
+  .asset-preview-react {
+    grid-template-columns: 1fr;
+  }
+
+  .game-screen {
+    min-height: 100svh;
+    padding-right: var(--game-safe-area-right);
+    padding-bottom: var(--game-safe-area-bottom);
+    padding-left: var(--game-safe-area-left);
+    overflow-x: hidden;
+  }
+
+  .mine-stage {
+    width: 100%;
+    max-width: none;
+    min-height: min(56.25vw, 58svh);
+    aspect-ratio: 16 / 9;
+  }
+
+  .game-hud {
+    position: relative;
+    z-index: 5;
+    padding-inline: max(10px, var(--game-safe-area-left)) max(10px, var(--game-safe-area-right));
+  }
+
+  .touch-controls button,
+  .game-controls button {
+    min-width: 48px;
+    min-height: 48px;
+  }
+}
+
+@media (max-width: 520px) and (orientation: portrait) {
+  .mine-stage {
+    /* Preserve the world aspect ratio, but use most of the available width so
+       the mine remains readable instead of becoming a small letterboxed card. */
+    width: calc(100vw - var(--game-safe-area-left) - var(--game-safe-area-right));
+    min-height: 0;
+    margin-inline: calc(-1 * max(0px, var(--game-safe-area-left)));
+    border-radius: 0;
+  }
+
+  .mine-canvas {
+    min-height: 56.25vw;
+  }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .asset-preview-page *,
+  .menu-art-picture img {
+    scroll-behavior: auto;
+    animation-duration: 0.001ms !important;
+    animation-iteration-count: 1 !important;
+    transition-duration: 0.001ms !important;
+  }
+}

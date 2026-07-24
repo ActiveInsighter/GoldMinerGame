@@ -2,11 +2,17 @@ import { useEffect, useRef, useState } from "react";
 import { createRoot } from "react-dom/client";
 import { GoldMinerGame } from "./GoldMinerGame";
 import { CloudSyncService, type CloudSyncStatus } from "./cloud/sync";
+import { AssetPreview } from "./debug/AssetPreview";
 import "./styles/main.css";
 import "./styles/phaser-polish.css";
 import "./styles/cloud-sync.css";
+import "./styles/art-pipeline.css";
 
-const VISUAL_TEST_MODE = new URLSearchParams(window.location.search).has("visual");
+const SEARCH_PARAMS = new URLSearchParams(window.location.search);
+const VISUAL_TEST_MODE = SEARCH_PARAMS.has("visual");
+const ASSET_PREVIEW_MODE =
+  (import.meta.env.DEV || VISUAL_TEST_MODE) &&
+  SEARCH_PARAMS.get("debug") === "assets";
 
 const INITIAL_STATUS: CloudSyncStatus = {
   label: "正在准备云存档",
@@ -95,7 +101,7 @@ function App() {
   const [service, setService] = useState<CloudSyncService | null>(null);
 
   useEffect(() => {
-    if (VISUAL_TEST_MODE) return undefined;
+    if (VISUAL_TEST_MODE || ASSET_PREVIEW_MODE) return undefined;
 
     const cloud = new CloudSyncService(setStatus);
     setService(cloud);
@@ -110,6 +116,8 @@ function App() {
       cloud.stop();
     };
   }, []);
+
+  if (ASSET_PREVIEW_MODE) return <AssetPreview />;
 
   return (
     <>

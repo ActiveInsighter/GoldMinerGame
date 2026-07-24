@@ -1,0 +1,182 @@
+{
+  "version": 1,
+  "coordinateSystem": {
+    "worldSize": [1280, 720],
+    "defaultPixelDensity": 2,
+    "originConvention": "normalized [x,y] from top-left",
+    "transparentPadding": "2-4 px after trimming"
+  },
+  "assets": [
+    {
+      "key": "menu-miner-portrait",
+      "path": "public/assets/menu/miner-portrait.webp",
+      "fallback": "public/assets/placeholders/menu/miner-portrait-placeholder.svg",
+      "recommendedSize": [960, 1080],
+      "transparent": true,
+      "frames": 1,
+      "origin": [0.5, 1],
+      "placeholder": true,
+      "priority": "P0"
+    },
+    {
+      "key": "miner",
+      "path": "public/assets/game/miner/miner.png",
+      "dataPath": "public/assets/game/miner/miner.json",
+      "format": "atlas",
+      "recommendedFrameSize": [256, 256],
+      "transparent": true,
+      "origin": [0.5, 0.92],
+      "placeholder": true,
+      "priority": "P0",
+      "animations": [
+        { "name": "idle", "frames": 8, "fps": 8, "loop": true },
+        { "name": "fire", "frames": 5, "fps": 14, "loop": false },
+        { "name": "pull-light", "frames": 8, "fps": 10, "loop": true },
+        { "name": "pull-heavy", "frames": 8, "fps": 7, "loop": true },
+        { "name": "dynamite", "frames": 6, "fps": 12, "loop": false },
+        { "name": "celebrate", "frames": 10, "fps": 10, "loop": true },
+        { "name": "fail", "frames": 8, "fps": 8, "loop": false }
+      ]
+    },
+    {
+      "key": "gold-small",
+      "path": "public/assets/game/items/gold-small.webp",
+      "recommendedSize": [64, 64],
+      "transparent": true,
+      "frames": 1,
+      "origin": [0.5, 0.5],
+      "placeholder": true,
+      "priority": "P0"
+    },
+    {
+      "key": "gold-medium",
+      "path": "public/assets/game/items/gold-medium.webp",
+      "recommendedSize": [96, 96],
+      "transparent": true,
+      "frames": 1,
+      "origin": [0.5, 0.5],
+      "placeholder": true,
+      "priority": "P0"
+    },
+    {
+      "key": "gold-large",
+      "path": "public/assets/game/items/gold-large.webp",
+      "recommendedSize": [144, 128],
+      "transparent": true,
+      "frames": 1,
+      "origin": [0.5, 0.5],
+      "placeholder": true,
+      "priority": "P0"
+    },
+    {
+      "key": "rock",
+      "path": "public/assets/game/items/rock.webp",
+      "recommendedSize": [96, 96],
+      "transparent": true,
+      "frames": 1,
+      "origin": [0.5, 0.5],
+      "placeholder": true,
+      "priority": "P0"
+    },
+    {
+      "key": "diamond",
+      "path": "public/assets/game/items/diamond.webp",
+      "recommendedSize": [72, 80],
+      "transparent": true,
+      "frames": 6,
+      "fps": 8,
+      "loop": true,
+      "origin": [0.5, 0.5],
+      "placeholder": true,
+      "priority": "P0"
+    },
+    {
+      "key": "chest",
+      "path": "public/assets/game/items/chest.webp",
+      "recommendedSize": [112, 96],
+      "transparent": true,
+      "frames": 4,
+      "fps": 8,
+      "loop": false,
+      "origin": [0.5, 0.55],
+      "placeholder": true,
+      "priority": "P0"
+    },
+    {
+      "key": "tnt",
+      "path": "public/assets/game/items/tnt.webp",
+      "recommendedSize": [88, 104],
+      "transparent": true,
+      "frames": 6,
+      "fps": 10,
+      "loop": true,
+      "origin": [0.5, 0.5],
+      "placeholder": true,
+      "priority": "P0"
+    },
+    {
+      "key": "mole",
+      "path": "public/assets/game/items/mole.webp",
+      "recommendedSize": [112, 80],
+      "transparent": true,
+      "frames": 8,
+      "fps": 10,
+      "loop": true,
+      "origin": [0.5, 0.55],
+      "placeholder": true,
+      "priority": "P0"
+    },
+    {
+      "key": "diamond-mole",
+      "path": "public/assets/game/items/diamond-mole.webp",
+      "recommendedSize": [120, 96],
+      "transparent": true,
+      "frames": 8,
+      "fps": 10,
+      "loop": true,
+      "origin": [0.5, 0.6],
+      "placeholder": true,
+      "priority": "P0"
+    },
+    {
+      "key": "background-layers",
+      "paths": [
+        "public/assets/game/backgrounds/sky.webp",
+        "public/assets/game/backgrounds/surface.webp",
+        "public/assets/game/backgrounds/mine-far.webp",
+        "public/assets/game/backgrounds/mine-mid.webp",
+        "public/assets/game/backgrounds/mine-supports.webp",
+        "public/assets/game/backgrounds/mine-front.webp"
+      ],
+      "recommendedSize": [2560, 1440],
+      "transparent": "all except sky and mine-far",
+      "frames": 1,
+      "origin": [0.5, 0],
+      "placeholder": true,
+      "priority": "P0",
+      "cropPolicy": "keep hook origin and full playable mine visible; crop decorative edges first"
+    },
+    {
+      "key": "ui-panels",
+      "path": "public/assets/ui/ui-panels.png",
+      "dataPath": "public/assets/ui/ui-panels.json",
+      "format": "atlas",
+      "transparent": true,
+      "nineSlice": { "left": 24, "right": 24, "top": 24, "bottom": 24 },
+      "placeholder": true,
+      "priority": "P1"
+    },
+    {
+      "key": "particles",
+      "path": "public/assets/game/effects/particles.png",
+      "dataPath": "public/assets/game/effects/particles.json",
+      "format": "atlas",
+      "frames": ["dust", "spark", "smoke", "rock-chip", "gold-chip", "star"],
+      "recommendedFrameSize": [32, 32],
+      "transparent": true,
+      "origin": [0.5, 0.5],
+      "placeholder": true,
+      "priority": "P1"
+    }
+  ]
+}
