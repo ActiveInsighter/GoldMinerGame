@@ -2,7 +2,7 @@ name: Run State
 
 on:
   workflow_run:
-    workflows: [Check, Test, Build, Deploy Worker]
+    workflows: [Check, Test, Build, Visual, Deploy Worker]
     types: [completed]
   workflow_dispatch:
 
