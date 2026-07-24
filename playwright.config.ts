@@ -11,7 +11,6 @@ export default defineConfig({
     baseURL: process.env.VISUAL_BASE_URL ?? "http://127.0.0.1:4173",
     browserName: "chromium",
     colorScheme: "light",
-    reducedMotion: "reduce",
     locale: "zh-CN",
   },
   webServer: process.env.VISUAL_BASE_URL
