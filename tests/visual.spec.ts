@@ -1,8 +1,35 @@
 import { expect, test, type Locator, type Page } from "@playwright/test";
 import { mkdir, writeFile } from "node:fs/promises";
+import { createRequire } from "node:module";
 import path from "node:path";
-import { PNG } from "pngjs";
 
+interface PngImage {
+  width: number;
+  height: number;
+  data: Buffer;
+}
+
+interface PngConstructor {
+  new (options: { width: number; height: number }): PngImage;
+  sync: {
+    read(input: Buffer): PngImage;
+    write(image: PngImage): Buffer;
+  };
+  bitblt(
+    source: PngImage,
+    target: PngImage,
+    sourceX: number,
+    sourceY: number,
+    width: number,
+    height: number,
+    targetX: number,
+    targetY: number,
+  ): void;
+}
+
+const { PNG } = createRequire(import.meta.url)("pngjs") as {
+  PNG: PngConstructor;
+};
 const OUTPUT = path.resolve("test-results/visual");
 const PREVIEW_HEIGHT = 1500;
 const FREEZE_MOTION_CSS =
