@@ -4,7 +4,7 @@ const token = process.env.GITHUB_TOKEN?.trim();
 const repository = process.env.GITHUB_REPOSITORY?.trim();
 if (!token || !repository) throw new Error("GITHUB_TOKEN and GITHUB_REPOSITORY are required.");
 
-const trackedWorkflows = new Set(["Check", "Test", "Build", "Deploy Worker"]);
+const trackedWorkflows = new Set(["Check", "Test", "Build", "Visual", "Deploy Worker"]);
 const response = await fetch(`https://api.github.com/repos/${repository}/actions/runs?per_page=100`, {
   headers: {
     Authorization: `Bearer ${token}`,
@@ -18,7 +18,7 @@ const body = await response.json();
 const runs = body.workflow_runs
   .filter((run) => trackedWorkflows.has(run.name))
   .sort((left, right) => Date.parse(right.created_at) - Date.parse(left.created_at))
-  .slice(0, 12)
+  .slice(0, 16)
   .map((run) => ({
     databaseId: run.id,
     workflow: run.name,
