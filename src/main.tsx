@@ -6,6 +6,8 @@ import "./styles/main.css";
 import "./styles/phaser-polish.css";
 import "./styles/cloud-sync.css";
 
+const VISUAL_TEST_MODE = new URLSearchParams(window.location.search).has("visual");
+
 const INITIAL_STATUS: CloudSyncStatus = {
   label: "正在准备云存档",
   detail: "本地进度始终可用",
@@ -88,11 +90,13 @@ function LoadingScreen() {
 }
 
 function App() {
-  const [ready, setReady] = useState(false);
+  const [ready, setReady] = useState(VISUAL_TEST_MODE);
   const [status, setStatus] = useState<CloudSyncStatus>(INITIAL_STATUS);
   const [service, setService] = useState<CloudSyncService | null>(null);
 
   useEffect(() => {
+    if (VISUAL_TEST_MODE) return undefined;
+
     const cloud = new CloudSyncService(setStatus);
     setService(cloud);
     let active = true;
@@ -110,7 +114,7 @@ function App() {
   return (
     <>
       {ready ? <GoldMinerGame /> : <LoadingScreen />}
-      <CloudSyncDock service={service} status={status} />
+      {!VISUAL_TEST_MODE && <CloudSyncDock service={service} status={status} />}
     </>
   );
 }
