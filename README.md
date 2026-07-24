@@ -134,7 +134,7 @@ npm run test:visual
 npx playwright install chromium
 ```
 
-视觉测试会截取桌面首页、游戏、暂停、商店，移动首页、游戏、暂停、商店，以及人物动画、物品纹理和 React 占位图片预览。结果保存到 `test-results/visual/`，并按照每 4 张截图生成一张 `contact-sheet-*.png` 拼图。测试还会检查页面异常、控制台错误、资源 404、Canvas 实际尺寸和横向溢出。
+视觉测试会截取桌面首页、游戏、暂停、商店，移动首页、游戏、暂停、商店，以及人物动画、物品纹理和 React 占位图片预览。结果保存到 `test-results/visual/`，并按照每 4 张截图生成一张 `contact-sheet-*.png` 拼图。测试还会检查页面异常、控制台错误、资源 404、Canvas 实际尺寸和横向溢出。`visualScreen=shop` 等直达参数只在同时存在 `visual=1` 时生效，不会改变正常生产流程。
 
 ## 云存档
 
