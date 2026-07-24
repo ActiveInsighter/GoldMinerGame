@@ -1,1 +1,14 @@
-null
+{
+  "databaseId": 30087858715,
+  "workflow": "Visual",
+  "event": "push",
+  "status": "completed",
+  "conclusion": "success",
+  "branch": "main",
+  "headSha": "0a01a7fcc55f38179a1f74e88a026a37449c1441",
+  "runNumber": 177,
+  "attempt": 1,
+  "createdAt": "2026-07-24T10:55:51Z",
+  "updatedAt": "2026-07-24T11:02:59Z",
+  "url": "https://github.com/ActiveInsighter/GoldMinerGame/actions/runs/30087858715"
+}
