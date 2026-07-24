@@ -18,10 +18,13 @@ for (const [groupIndex, group] of groups.entries()) {
   );
   const cellWidth = Math.max(...images.map(({ image }) => image.width));
   const cellHeight = Math.max(...images.map(({ image }) => image.height));
+  const allPortrait = images.every(({ image }) => image.height > image.width * 1.2);
+  const columns = allPortrait ? images.length : 2;
+  const rows = Math.ceil(images.length / columns);
   const gutter = 18;
   const sheet = new PNG({
-    width: cellWidth * 2 + gutter * 3,
-    height: cellHeight * 2 + gutter * 3,
+    width: cellWidth * columns + gutter * (columns + 1),
+    height: cellHeight * rows + gutter * (rows + 1),
   });
 
   for (let offset = 0; offset < sheet.data.length; offset += 4) {
@@ -32,10 +35,10 @@ for (const [groupIndex, group] of groups.entries()) {
   }
 
   images.forEach(({ image }, index) => {
-    const column = index % 2;
-    const row = Math.floor(index / 2);
+    const column = index % columns;
+    const row = Math.floor(index / columns);
     const x = gutter + column * (cellWidth + gutter) + Math.floor((cellWidth - image.width) / 2);
-    const y = gutter + row * (cellHeight + gutter) + Math.floor((cellHeight - image.height) / 2);
+    const y = gutter + row * (cellHeight + gutter);
     PNG.bitblt(image, sheet, 0, 0, image.width, image.height, x, y);
   });
 
