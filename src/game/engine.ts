@@ -87,7 +87,6 @@ class RuntimeBridgeScene extends Phaser.Scene {
     surface.fillGradientStyle(0xffcf69, 0xffc45a, 0xeaa348, 0xe59a40, 1);
     surface.fillRect(0, 0, WORLD_WIDTH, GROUND_Y);
 
-    // Classic orange header light and the dark mine opening behind the miner.
     surface.fillStyle(0xffe59a, 0.2);
     surface.fillEllipse(WORLD_WIDTH * 0.18, -20, 620, 250);
     surface.fillStyle(0x34428d, 1);
@@ -137,9 +136,14 @@ class RuntimeBridgeScene extends Phaser.Scene {
     hair.fillStyle(0xf4f0df, 1);
     hair.beginPath();
     hair.moveTo(2, -150);
-    hair.quadraticCurveTo(17, -174, 47, -163);
-    hair.quadraticCurveTo(67, -158, 75, -142);
-    hair.quadraticCurveTo(47, -151, 19, -139);
+    hair.lineTo(13, -166);
+    hair.lineTo(31, -172);
+    hair.lineTo(50, -165);
+    hair.lineTo(68, -153);
+    hair.lineTo(75, -142);
+    hair.lineTo(56, -148);
+    hair.lineTo(35, -145);
+    hair.lineTo(18, -137);
     hair.closePath();
     hair.fillPath();
     hair.lineStyle(2, 0xbcb6a6, 1);
@@ -161,7 +165,8 @@ class RuntimeBridgeScene extends Phaser.Scene {
     brow.lineStyle(3, 0x6e3a21, 1);
     brow.beginPath();
     brow.moveTo(25, -141);
-    brow.quadraticCurveTo(34, -146, 43, -140);
+    brow.lineTo(33, -145);
+    brow.lineTo(43, -140);
     brow.strokePath();
 
     const hat = this.add.graphics();
