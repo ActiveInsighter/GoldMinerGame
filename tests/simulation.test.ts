@@ -84,6 +84,23 @@ function advance(simulation: GameSimulation, seconds: number): void {
   }
 }
 
+function advanceUntil(
+  simulation: GameSimulation,
+  predicate: () => boolean,
+  maximumSeconds = 2,
+): boolean {
+  let elapsed = 0;
+  while (
+    elapsed < maximumSeconds &&
+    !simulation.getSnapshot().terminal &&
+    !predicate()
+  ) {
+    simulation.update(0.02);
+    elapsed += 0.02;
+  }
+  return predicate();
+}
+
 describe("GameSimulation", () => {
   it("moves through launch, empty return and swinging without React or Canvas", () => {
     const simulation = createSimulation();
@@ -142,18 +159,30 @@ describe("GameSimulation", () => {
 
   it("uses dynamite only while an item is attached and emits explosion events", () => {
     const simulation = createSimulation({
-      items: [item("rock")],
+      items: [item("rock", { y: 520 })],
       initialDynamite: 1,
     });
     simulation.drainEvents();
     expect(simulation.useDynamite()).toBe(false);
     simulation.fire();
-    advance(simulation, 0.25);
-    expect(simulation.getSnapshot().hook.state).toBe("retractingItem");
+    const attached = advanceUntil(
+      simulation,
+      () => simulation.getSnapshot().hook.state === "retractingItem",
+    );
+    expect(attached).toBe(true);
     expect(simulation.useDynamite()).toBe(true);
     const events = simulation.drainEvents();
-    expect(events.some((event) => event.type === "effect" && event.kind === "explosion")).toBe(true);
-    expect(events.some((event) => event.type === "item-removed" && event.reason === "destroyed")).toBe(true);
+    expect(
+      events.some(
+        (event) => event.type === "effect" && event.kind === "explosion",
+      ),
+    ).toBe(true);
+    expect(
+      events.some(
+        (event) =>
+          event.type === "item-removed" && event.reason === "destroyed",
+      ),
+    ).toBe(true);
     expect(simulation.getSnapshot().dynamite).toBe(0);
   });
 
