@@ -1,6 +1,11 @@
 import Phaser from "phaser";
 import { AssetKeys } from "../config/assetKeys";
 import { GROUND_Y, WORLD_HEIGHT, WORLD_WIDTH } from "../config/gameConfig";
+import {
+  MINER_ANIMATION_STATES,
+  MINER_PLACEHOLDER_FRAMES,
+  type MinerAnimationState,
+} from "../systems/AnimationSystem";
 
 function createTexture(
   scene: Phaser.Scene,
@@ -203,29 +208,115 @@ export function createPlaceholderTextures(scene: Phaser.Scene): void {
     g.fillCircle(22, 5, 5);
   });
 
-  createTexture(scene, AssetKeys.miner.placeholder, 148, 178, (g) => {
+  const drawMinerFrame = (
+    g: Phaser.GameObjects.Graphics,
+    state: MinerAnimationState,
+    phase: 0 | 1,
+  ): void => {
+    const bob = phase === 0 ? 0 : 3;
+    const heavy = state === "pull-heavy";
+    const failing = state === "fail";
+    const celebrating = state === "celebrate";
+    const firing = state === "fire";
+    const dynamite = state === "dynamite";
+    const pulling = state === "pull-light" || heavy;
+    const lean = heavy ? -8 : pulling ? -3 : firing ? 4 : failing ? 7 : 0;
+    const bodyY = 82 + bob;
+
     g.fillStyle(0x281c17, 0.28);
     g.fillEllipse(74, 166, 118, 15);
+
+    g.save();
+    g.translateCanvas(74, 96);
+    g.rotateCanvas(Phaser.Math.DegToRad(lean));
+    g.translateCanvas(-74, -96);
+
     g.lineStyle(4, 0x4f2a1a, 1);
-    g.fillStyle(0x9e592e, 1);
-    g.fillRoundedRect(45, 82, 72, 73, 20);
-    g.strokeRoundedRect(45, 82, 72, 73, 20);
-    g.fillStyle(0xf0b574, 1);
-    g.fillCircle(75, 63, 38);
-    g.fillStyle(0xf6efd8, 1);
-    g.fillEllipse(67, 79, 62, 46);
+    g.fillStyle(failing ? 0x75675f : heavy ? 0xb65d32 : 0x9e592e, 1);
+    g.fillRoundedRect(45, bodyY, 72, 73, 20);
+    g.strokeRoundedRect(45, bodyY, 72, 73, 20);
+
+    g.fillStyle(failing ? 0xb9a89c : 0xf0b574, 1);
+    g.fillCircle(75, 63 + bob, 38);
+    g.fillStyle(failing ? 0xd3cbc5 : 0xf6efd8, 1);
+    g.fillEllipse(67, 79 + bob, 62, 46);
+
     g.fillStyle(0x2c211c, 1);
-    g.fillCircle(85, 57, 4);
+    g.fillCircle(85, 57 + bob, 4);
+    if (failing) {
+      g.lineStyle(3, 0x3d302a, 1);
+      g.lineBetween(80, 66 + bob, 91, 71 + bob);
+    } else if (celebrating) {
+      g.fillStyle(0xffffff, 1);
+      g.fillCircle(86, 56 + bob, 2);
+    }
+
     g.fillStyle(0xf0e1b8, 1);
-    g.fillRoundedRect(28, 19, 94, 31, 12);
+    g.fillRoundedRect(28, 19 + bob, 94, 31, 12);
     g.fillStyle(0xa3482b, 1);
-    g.fillRect(29, 42, 92, 10);
+    g.fillRect(29, 42 + bob, 92, 10);
     g.fillStyle(0x6b3a22, 1);
-    g.fillEllipse(75, 51, 124, 17);
+    g.fillEllipse(75, 51 + bob, 124, 17);
+
+    g.lineStyle(10, 0xb96833, 1);
+    if (celebrating) {
+      g.lineBetween(50, 103 + bob, 24, 61 - phase * 4);
+      g.lineBetween(108, 103 + bob, 134, 61 + phase * 4);
+    } else if (firing) {
+      g.lineBetween(48, 105 + bob, 11, 82 - phase * 6);
+      g.lineBetween(108, 105 + bob, 132, 91 + phase * 3);
+    } else if (pulling) {
+      g.lineBetween(49, 105 + bob, 17, 126 + (heavy ? 8 : 0));
+      g.lineBetween(108, 105 + bob, 130, 122 + phase * 4);
+    } else if (dynamite) {
+      g.lineBetween(48, 105 + bob, 23, 85);
+      g.lineBetween(108, 105 + bob, 128, 80);
+    } else if (failing) {
+      g.lineBetween(48, 105 + bob, 34, 143);
+      g.lineBetween(108, 105 + bob, 119, 144);
+    } else {
+      g.lineBetween(48, 105 + bob, 26, 122 + phase * 3);
+      g.lineBetween(108, 105 + bob, 128, 120 - phase * 3);
+    }
+
     g.lineStyle(5, 0x35241d, 1);
-    g.strokeCircle(27, 121, 22);
-    g.lineBetween(27, 121, 8, 92);
-  });
+    g.strokeCircle(27, 121 + bob, 22);
+    const spoke = phase === 0 ? 0 : Math.PI / 2;
+    g.lineBetween(
+      27,
+      121 + bob,
+      27 + Math.cos(spoke) * 18,
+      121 + bob + Math.sin(spoke) * 18,
+    );
+
+    if (dynamite) {
+      g.fillStyle(0xa83a2c, 1);
+      g.fillRoundedRect(119, 68, 18, 44, 5);
+      g.lineStyle(2, 0x2f271f, 1);
+      g.lineBetween(128, 68, 138, 57);
+      g.fillStyle(phase === 0 ? 0xffd642 : 0xff8a2b, 1);
+      g.fillCircle(139, 56, phase === 0 ? 4 : 7);
+    }
+
+    if (celebrating) {
+      g.fillStyle(0xffef79, 1);
+      g.fillCircle(22, 44, phase === 0 ? 5 : 8);
+      g.fillCircle(136, 42, phase === 0 ? 8 : 5);
+    }
+
+    g.restore();
+  };
+
+  createTexture(scene, AssetKeys.miner.placeholder, 148, 178, (g) =>
+    drawMinerFrame(g, "idle", 0),
+  );
+  for (const state of MINER_ANIMATION_STATES) {
+    MINER_PLACEHOLDER_FRAMES[state].forEach((key, phase) => {
+      createTexture(scene, key, 148, 178, (g) =>
+        drawMinerFrame(g, state, phase as 0 | 1),
+      );
+    });
+  }
 
   const particle = (key: string, color: number, shape: "circle" | "square" | "star") =>
     createTexture(scene, key, 20, 20, (g) => {
