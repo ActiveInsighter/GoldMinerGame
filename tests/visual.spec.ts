@@ -1,18 +1,36 @@
-import { expect, test, type Page } from "@playwright/test";
+import { expect, test, type Locator, type Page } from "@playwright/test";
 import { mkdir } from "node:fs/promises";
 import path from "node:path";
 
 const OUTPUT = path.resolve("test-results/visual");
-const FREEZE_MOTION_CSS = "*,*::before,*::after{transition:none!important;animation-duration:0s!important;animation-delay:0s!important}";
+const FREEZE_MOTION_CSS =
+  "*,*::before,*::after{transition:none!important;animation-duration:0s!important;animation-delay:0s!important}";
 
-async function openMenu(page: Page): Promise<void> {
-  await page.goto("/?visual=1", { waitUntil: "domcontentloaded" });
-  await page.addStyleTag({ content: FREEZE_MOTION_CSS });
-  await expect(page.locator(".menu-screen")).toBeVisible({ timeout: 15_000 });
+interface RuntimeDiagnostics {
+  pageErrors: string[];
+  consoleErrors: string[];
+  missingResources: string[];
 }
 
-async function prepare(page: Page, width: number, height: number): Promise<void> {
-  await page.setViewportSize({ width, height });
+function watchRuntime(page: Page): RuntimeDiagnostics {
+  const diagnostics: RuntimeDiagnostics = {
+    pageErrors: [],
+    consoleErrors: [],
+    missingResources: [],
+  };
+  page.on("pageerror", (error) => diagnostics.pageErrors.push(error.message));
+  page.on("console", (message) => {
+    if (message.type() === "error") diagnostics.consoleErrors.push(message.text());
+  });
+  page.on("response", (response) => {
+    if (response.status() === 404) {
+      diagnostics.missingResources.push(response.url());
+    }
+  });
+  return diagnostics;
+}
+
+async function installDeterminism(page: Page): Promise<void> {
   await page.addInitScript(() => {
     const fixedNow = 1_786_000_000_000;
     Date.now = () => fixedNow;
@@ -22,54 +40,182 @@ async function prepare(page: Page, width: number, height: number): Promise<void>
       return state / 0x1_0000_0000;
     };
   });
-  await openMenu(page);
+}
+
+async function openPath(
+  page: Page,
+  url: string,
+  ready: Locator,
+): Promise<void> {
+  await page.goto(url, { waitUntil: "domcontentloaded" });
+  await page.addStyleTag({ content: FREEZE_MOTION_CSS });
+  await expect(ready).toBeVisible({ timeout: 15_000 });
+}
+
+async function expectVisibleWithDiagnostics(
+  locator: Locator,
+  diagnostics: RuntimeDiagnostics,
+): Promise<void> {
+  try {
+    await expect(locator).toBeVisible({ timeout: 15_000 });
+  } catch (error) {
+    const details = JSON.stringify(diagnostics, null, 2);
+    throw new Error(
+      `${error instanceof Error ? error.message : String(error)}\nRuntime diagnostics:\n${details}`,
+    );
+  }
 }
 
 async function capture(page: Page, name: string): Promise<void> {
   await page.screenshot({ path: path.join(OUTPUT, name), fullPage: true });
 }
 
+async function expectNoHorizontalOverflow(page: Page): Promise<void> {
+  const overflow = await page.evaluate(
+    () => document.documentElement.scrollWidth - window.innerWidth,
+  );
+  expect(overflow).toBeLessThanOrEqual(1);
+}
+
+function expectCleanRuntime(diagnostics: RuntimeDiagnostics): void {
+  expect(diagnostics.pageErrors).toEqual([]);
+  expect(diagnostics.consoleErrors).toEqual([]);
+  expect(diagnostics.missingResources).toEqual([]);
+}
+
+async function verifyCanvas(page: Page, minimumWidth: number): Promise<void> {
+  const canvas = page.locator(".mine-canvas");
+  const box = await canvas.boundingBox();
+  expect(box?.width ?? 0).toBeGreaterThanOrEqual(minimumWidth);
+  expect(box?.height ?? 0).toBeGreaterThan(minimumWidth * 0.5);
+  const backingSize = await canvas.evaluate((element) => {
+    const target = element as HTMLCanvasElement;
+    return { width: target.width, height: target.height };
+  });
+  expect(backingSize).toEqual({ width: 1280, height: 720 });
+}
+
 test.beforeAll(async () => {
   await mkdir(OUTPUT, { recursive: true });
 });
 
-test("capture primary desktop and mobile UI", async ({ browser }) => {
-  const desktop = await browser.newPage({ viewport: { width: 1440, height: 900 }, deviceScaleFactor: 1 });
-  await prepare(desktop, 1440, 900);
+test("capture direct Phaser rendering and responsive UI", async ({ browser }) => {
+  const desktop = await browser.newPage({
+    viewport: { width: 1440, height: 900 },
+    deviceScaleFactor: 1,
+    reducedMotion: "reduce",
+  });
+  const desktopDiagnostics = watchRuntime(desktop);
+  await installDeterminism(desktop);
+
+  await openPath(desktop, "/?visual=1", desktop.locator(".menu-screen"));
   await capture(desktop, "01-menu-desktop.png");
 
   await desktop.getByRole("button", { name: /开始淘金/ }).click();
-  await expect(desktop.locator(".mine-canvas")).toBeVisible();
+  await expectVisibleWithDiagnostics(
+    desktop.locator(".mine-canvas"),
+    desktopDiagnostics,
+  );
   await desktop.waitForTimeout(900);
+  await verifyCanvas(desktop, 900);
   await capture(desktop, "02-game-desktop.png");
 
   await desktop.getByRole("button", { name: "暂停游戏" }).click();
-  await expect(desktop.getByRole("heading", { name: "卷扬机已停下" })).toBeVisible();
+  await expectVisibleWithDiagnostics(
+    desktop.getByRole("heading", { name: "卷扬机已停下" }),
+    desktopDiagnostics,
+  );
   await capture(desktop, "03-pause-desktop.png");
 
-  await openMenu(desktop);
-  await desktop.getByRole("button", { name: "声音设置" }).click();
-  await expect(desktop.getByRole("heading", { name: "声音与本地数据" })).toBeVisible();
-  await capture(desktop, "04-settings-desktop.png");
+  await openPath(
+    desktop,
+    "/?visual=1&visualScreen=shop",
+    desktop.getByRole("heading", { name: "老山姆补给站" }),
+  );
+  await capture(desktop, "04-shop-desktop.png");
+  await expectNoHorizontalOverflow(desktop);
+  expectCleanRuntime(desktopDiagnostics);
   await desktop.close();
 
-  const mobile = await browser.newPage({ viewport: { width: 390, height: 844 }, deviceScaleFactor: 1 });
-  await prepare(mobile, 390, 844);
+  const mobile = await browser.newPage({
+    viewport: { width: 390, height: 844 },
+    deviceScaleFactor: 1,
+    reducedMotion: "reduce",
+  });
+  const mobileDiagnostics = watchRuntime(mobile);
+  await installDeterminism(mobile);
+
+  await openPath(mobile, "/?visual=1", mobile.locator(".menu-screen"));
   await capture(mobile, "05-menu-mobile.png");
 
   await mobile.getByRole("button", { name: /开始淘金/ }).click();
-  await expect(mobile.locator(".mine-canvas")).toBeVisible();
+  await expectVisibleWithDiagnostics(
+    mobile.locator(".mine-canvas"),
+    mobileDiagnostics,
+  );
   await mobile.waitForTimeout(700);
+  await verifyCanvas(mobile, 360);
+  await expectNoHorizontalOverflow(mobile);
   await capture(mobile, "06-game-mobile.png");
 
-  await openMenu(mobile);
-  await mobile.getByRole("button", { name: "玩法说明" }).click();
-  await expect(mobile.getByRole("heading", { name: "淘金入门" })).toBeVisible();
-  await capture(mobile, "07-help-mobile.png");
+  await mobile.getByRole("button", { name: "暂停游戏" }).click();
+  await expectVisibleWithDiagnostics(
+    mobile.getByRole("heading", { name: "卷扬机已停下" }),
+    mobileDiagnostics,
+  );
+  await capture(mobile, "07-pause-mobile.png");
 
-  await openMenu(mobile);
-  await mobile.getByRole("button", { name: "成就与记录" }).click();
-  await expect(mobile.getByRole("heading", { name: "矿工手册" })).toBeVisible();
-  await capture(mobile, "08-achievements-mobile.png");
+  await openPath(
+    mobile,
+    "/?visual=1&visualScreen=shop",
+    mobile.getByRole("heading", { name: "老山姆补给站" }),
+  );
+  await expectNoHorizontalOverflow(mobile);
+  await capture(mobile, "08-shop-mobile.png");
+  expectCleanRuntime(mobileDiagnostics);
   await mobile.close();
+
+  const assets = await browser.newPage({
+    viewport: { width: 1440, height: 1000 },
+    deviceScaleFactor: 1,
+    reducedMotion: "reduce",
+  });
+  const assetDiagnostics = watchRuntime(assets);
+  await installDeterminism(assets);
+  await openPath(
+    assets,
+    "/?visual=1&debug=assets",
+    assets.getByRole("heading", { name: "资源与动画预览" }),
+  );
+  const previewCanvas = assets.locator(".asset-preview-canvas canvas");
+  await expectVisibleWithDiagnostics(previewCanvas, assetDiagnostics);
+  await assets.waitForTimeout(800);
+
+  const box = await previewCanvas.boundingBox();
+  if (!box) throw new Error("Asset preview canvas has no bounding box.");
+  const scale = box.width / 1280;
+  await assets.screenshot({
+    path: path.join(OUTPUT, "09-miner-animation-preview.png"),
+    clip: {
+      x: box.x,
+      y: box.y + 990 * scale,
+      width: box.width,
+      height: 330 * scale,
+    },
+  });
+  await assets.screenshot({
+    path: path.join(OUTPUT, "10-item-placeholder-preview.png"),
+    clip: {
+      x: box.x,
+      y: box.y + 595 * scale,
+      width: box.width,
+      height: 405 * scale,
+    },
+  });
+  await assets.locator(".asset-preview-react").screenshot({
+    path: path.join(OUTPUT, "11-react-art-preview.png"),
+  });
+  await expectNoHorizontalOverflow(assets);
+  expectCleanRuntime(assetDiagnostics);
+  await assets.close();
 });
