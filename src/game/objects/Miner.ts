@@ -1,43 +1,28 @@
 import Phaser from "phaser";
-import { AssetKeys } from "../config/assetKeys";
 import { VisualDepth } from "../config/visualConfig";
 import type { HookState } from "../simulation/simulationTypes";
 import {
+  getMinerInitialTexture,
   MINER_ANIMATIONS,
   type MinerAnimationState,
 } from "../systems/AnimationSystem";
-import { resolveTextureKey } from "../systems/AssetSystem";
 
 export type { MinerAnimationState } from "../systems/AnimationSystem";
 
 export class Miner extends Phaser.GameObjects.Container {
   private readonly bodySprite: Phaser.GameObjects.Sprite;
-  private readonly arm: Phaser.GameObjects.Rectangle;
-  private readonly winch: Phaser.GameObjects.Arc;
   private readonly status: Phaser.GameObjects.Text;
   private animationState: MinerAnimationState | null = null;
   private readonly reducedMotion: boolean;
-  private readonly usingFormalAtlas: boolean;
 
   constructor(scene: Phaser.Scene, x: number, y: number, reducedMotion = false) {
     super(scene, x, y);
     this.reducedMotion = reducedMotion;
     this.setDepth(VisualDepth.miner);
 
-    const minerTexture = resolveTextureKey(scene, AssetKeys.miner.atlas);
-    this.usingFormalAtlas = minerTexture === AssetKeys.miner.atlas;
     this.bodySprite = scene.add
-      .sprite(0, 0, minerTexture)
+      .sprite(0, 0, getMinerInitialTexture(scene))
       .setOrigin(0.5, 0.92);
-    this.arm = scene.add
-      .rectangle(-55, -62, 17, 58, 0xb96833)
-      .setOrigin(0.5, 0.15)
-      .setRotation(0.7)
-      .setVisible(!this.usingFormalAtlas);
-    this.winch = scene.add
-      .circle(-78, -35, 19, 0x2d211c)
-      .setStrokeStyle(5, 0xd0a15b, 1)
-      .setVisible(!this.usingFormalAtlas);
     this.status = scene.add
       .text(0, -176, "IDLE", {
         fontFamily: "system-ui, sans-serif",
@@ -50,7 +35,7 @@ export class Miner extends Phaser.GameObjects.Container {
       .setOrigin(0.5)
       .setAlpha(0.78);
 
-    this.add([this.arm, this.bodySprite, this.winch, this.status]);
+    this.add([this.bodySprite, this.status]);
     scene.add.existing(this);
     this.playState("idle");
   }
@@ -67,31 +52,19 @@ export class Miner extends Phaser.GameObjects.Container {
   playState(next: MinerAnimationState): void {
     if (this.animationState === next) return;
     this.animationState = next;
-    this.scene.tweens.killTweensOf([
-      this,
-      this.bodySprite,
-      this.arm,
-      this.winch,
-    ]);
+    this.scene.tweens.killTweensOf([this, this.bodySprite]);
     this.setScale(1).setAngle(0).setAlpha(1);
     this.bodySprite.clearTint();
-    this.arm.setRotation(0.7);
 
     const animation = MINER_ANIMATIONS[next];
     this.status.setText(
       `${next.toUpperCase()} · ${animation.frameRate} FPS`,
     );
-    if (
-      this.usingFormalAtlas &&
-      this.scene.anims.exists(animation.key)
-    ) {
+    if (this.scene.anims.exists(animation.key)) {
       this.bodySprite.play(animation.key, true);
-    } else {
-      this.bodySprite.stop();
     }
 
     if (next === "fire") {
-      this.arm.setRotation(1.22);
       this.scene.tweens.add({
         targets: this,
         scaleX: 1.04,
@@ -102,7 +75,6 @@ export class Miner extends Phaser.GameObjects.Container {
       return;
     }
     if (next === "pull-light") {
-      this.arm.setRotation(0.44);
       this.scene.tweens.add({
         targets: this,
         angle: -2,
@@ -110,16 +82,9 @@ export class Miner extends Phaser.GameObjects.Container {
         yoyo: true,
         repeat: -1,
       });
-      this.scene.tweens.add({
-        targets: this.winch,
-        angle: 360,
-        duration: 620,
-        repeat: -1,
-      });
       return;
     }
     if (next === "pull-heavy") {
-      this.arm.setRotation(0.22);
       this.bodySprite.setTint(0xffd5b0);
       this.scene.tweens.add({
         targets: this,
@@ -127,12 +92,6 @@ export class Miner extends Phaser.GameObjects.Container {
         scaleX: 1.06,
         duration: this.reducedMotion ? 520 : 300,
         yoyo: true,
-        repeat: -1,
-      });
-      this.scene.tweens.add({
-        targets: this.winch,
-        angle: 360,
-        duration: 1_050,
         repeat: -1,
       });
       return;
@@ -179,21 +138,10 @@ export class Miner extends Phaser.GameObjects.Container {
       yoyo: true,
       repeat: -1,
     });
-    this.scene.tweens.add({
-      targets: this.winch,
-      angle: 360,
-      duration: 4_800,
-      repeat: -1,
-    });
   }
 
   override destroy(fromScene?: boolean): void {
-    this.scene.tweens.killTweensOf([
-      this,
-      this.bodySprite,
-      this.arm,
-      this.winch,
-    ]);
+    this.scene.tweens.killTweensOf([this, this.bodySprite]);
     super.destroy(fromScene);
   }
 }
