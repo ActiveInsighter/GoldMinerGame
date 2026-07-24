@@ -40,6 +40,8 @@ React remains responsible for:
 
 React must not store hook length, angle or mine-item positions. It communicates through the `GoldMinerEngine` controller and receives throttled `HudSnapshot` values.
 
+React supplies only a `.mine-phaser-host` container. Phaser creates, sizes and destroys the visible canvas inside that container. This is required for `Phaser.AUTO` to perform normal WebGL capability detection; passing a pre-created canvas would make Phaser treat the page as a custom environment and require an explicit renderer type.
+
 ## Phaser responsibilities
 
 Phaser owns the visible mine world:
@@ -60,7 +62,7 @@ The loading contract is:
 
 ```text
 formal file exists and loads → use formal texture
-formal file missing/fails     → generate local placeholder under the same key
+formal file missing/fails     → generate local placeholder under the configured fallback key
 ```
 
 A missing formal asset must never make the game black-screen or fail production build.
@@ -72,7 +74,7 @@ A missing formal asset must never make the game black-screen or fail production 
 3. `GameScene` creates simulation and display objects.
 4. `GoldMinerEngine.start()` enables simulation updates.
 5. Scene shutdown removes keyboard, pointer and visibility listeners, destroys particle emitters and clears object references.
-6. React cleanup calls `GoldMinerEngine.stop()`, which destroys the Phaser game instance exactly once.
+6. React cleanup calls `GoldMinerEngine.stop()`, which destroys the Phaser game instance and its generated canvas exactly once.
 
 ## Preserved systems
 
@@ -87,6 +89,6 @@ The refactor intentionally leaves these modules and contracts intact:
 ## Testing boundaries
 
 - Pure simulation tests instantiate `GameSimulation` without a browser renderer.
-- Manifest tests ensure every business item maps to a texture and every key has a fallback.
-- Playwright visual tests validate menu, live game, pause and debug asset preview at desktop and mobile viewports.
+- Manifest tests ensure every business item maps to a texture and every texture key has a fallback.
+- Playwright visual tests validate menu, live game, pause, shop and asset previews at desktop and mobile viewports.
 - Worker/D1 tests remain independent of Phaser.
