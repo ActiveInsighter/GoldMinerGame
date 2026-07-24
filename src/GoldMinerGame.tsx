@@ -236,7 +236,7 @@ function StatPill({
 }
 
 export function GoldMinerGame() {
-  const canvasRef = useRef<HTMLCanvasElement | null>(null);
+  const gameHostRef = useRef<HTMLDivElement | null>(null);
   const engineRef = useRef<GoldMinerEngine | null>(null);
   const runRef = useRef<RunState | null>(
     VISUAL_SHOP_PREVIEW ? VISUAL_PREVIEW_RUN : null,
@@ -539,10 +539,10 @@ export function GoldMinerGame() {
   );
 
   useEffect(() => {
-    if (screen !== "game" || !session || !canvasRef.current) return;
+    if (screen !== "game" || !session || !gameHostRef.current) return;
     engineRef.current?.stop();
     const engine = new GoldMinerEngine({
-      canvas: canvasRef.current,
+      parent: gameHostRef.current,
       level: session.config,
       items: session.items,
       effects: session.effects,
@@ -924,7 +924,7 @@ export function GoldMinerGame() {
           </header>
 
           <div className="mine-stage">
-            <canvas ref={canvasRef} className="mine-canvas" tabIndex={0} />
+            <div ref={gameHostRef} className="mine-phaser-host" />
             <div className="canvas-frame" aria-hidden="true" />
             {hud.event && (
               <div className={`event-card event-${hud.event.type}`}>
