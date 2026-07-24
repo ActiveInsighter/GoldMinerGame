@@ -8,6 +8,8 @@ import {
   useState,
   type PointerEvent as ReactPointerEvent,
 } from "react";
+import { ArtImage } from "./components/ArtImage";
+import { ArtAssets } from "./config/artAssets";
 import { gameAudio, type AudioSettings } from "./game/audio";
 import {
   GoldMinerEngine,
@@ -189,29 +191,11 @@ function parseSavedEffects(value: unknown): LevelItemEffects | undefined {
 
 function MinerPortrait() {
   return (
-    <div className="miner-portrait" aria-hidden="true">
-      <div className="portrait-halo" />
-      <div className="miner-hat">
-        <span />
-      </div>
-      <div className="miner-head">
-        <i className="miner-ear" />
-        <i className="miner-nose" />
-        <i className="miner-eye" />
-      </div>
-      <div className="miner-beard">
-        <i />
-        <b />
-      </div>
-      <div className="miner-body" />
-      <div className="miner-arm" />
-      <div className="winch">
-        <i />
-        <span />
-      </div>
-      <div className="portrait-rope" />
-      <div className="portrait-hook">J</div>
-    </div>
+    <ArtImage
+      className="menu-art-picture"
+      asset={ArtAssets.menuMinerPortrait}
+      aria-hidden="true"
+    />
   );
 }
 

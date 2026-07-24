@@ -18,6 +18,7 @@ import type {
   SimulationEvent,
   SimulationOptions,
   SimulationSnapshot,
+  HookState,
 } from "./simulationTypes";
 
 export function clamp(value: number, min: number, max: number): number {
@@ -78,9 +79,9 @@ function copyEvent(event: ActiveEvent | null): ActiveEvent | null {
 }
 
 export class GameSimulation {
-  private readonly level;
-  private readonly effects;
-  private readonly mode;
+  private readonly level: SimulationOptions["level"];
+  private readonly effects: SimulationOptions["effects"];
+  private readonly mode: SimulationOptions["mode"];
   private readonly rng: SeededRng;
   private readonly reducedMotion: boolean;
   private readonly items: RuntimeMineItem[];
@@ -101,12 +102,21 @@ export class GameSimulation {
   private originX = WORLD_WIDTH / 2;
   private barrelFuse = -1;
 
-  private hook = {
-    state: "swinging" as const | "extending" | "retractingEmpty" | "retractingItem" | "destroying",
+  private hook: {
+    state: HookState;
+    angle: number;
+    direction: -1 | 1;
+    length: number;
+    attachedId: string | null;
+    perfect: boolean;
+    previousX: number;
+    previousY: number;
+  } = {
+    state: "swinging",
     angle: 0,
-    direction: 1 as -1 | 1,
+    direction: 1,
     length: HookConfig.minimumLength,
-    attachedId: null as string | null,
+    attachedId: null,
     perfect: false,
     previousX: WORLD_WIDTH / 2,
     previousY: GROUND_Y + HookConfig.minimumLength,
@@ -320,7 +330,7 @@ export class GameSimulation {
       return;
     }
 
-    let speed = HookConfig.emptyReturnSpeed;
+    let speed: number = HookConfig.emptyReturnSpeed;
     if (this.hook.state === "retractingItem") {
       const item = this.attachedItem();
       if (item) {
@@ -576,7 +586,7 @@ export class GameSimulation {
       y = this.rng.float(210, WORLD_HEIGHT - 54);
     }
     const direction: -1 | 1 = this.rng.next() < 0.5 ? -1 : 1;
-    const speedRange = config.moveSpeedRange;
+    const speedRange = "moveSpeedRange" in config ? config.moveSpeedRange : undefined;
     const velocityX = speedRange ? this.rng.float(speedRange[0], speedRange[1]) * direction : 0;
     return {
       id,
