@@ -7,7 +7,7 @@ The game currently runs entirely with committed local placeholders. Replace asse
 | Asset | Formal path | Recommended resolution / frames | Transparency | Current placeholder | Replacement |
 |---|---|---|---|---|---|
 | Menu miner promotional illustration | `public/assets/menu/miner-portrait.webp` and `.png` | 960×1080, 1 frame | yes | `public/assets/placeholders/menu/miner-portrait-placeholder.svg` | Update `src/config/artAssets.ts`, set `placeholder: false` |
-| Game miner atlas | `public/assets/game/miner/miner.png` + `miner.json` | 256×256 per frame; idle 8, fire 5, pull-light 8, pull-heavy 8, dynamite 6, celebrate 10, fail 8 | yes | generated `miner-placeholder` texture | Update miner descriptor and animation definitions; keep `[0.5,0.92]` origin |
+| Game miner atlas | `public/assets/game/miner/miner.png` + `miner.json` | 256×256 per frame; idle 8, fire 5, pull-light 8, pull-heavy 8, dynamite 6, celebrate 10, fail 8 | yes | two generated transparent frames for each state, registered as Phaser animations | Configure the atlas descriptor and matching frame prefixes; retain animation keys and `[0.5,0.92]` origin |
 | Small gold | `public/assets/game/items/gold-small.webp` | 64×64, 1 frame | yes | generated `gold-small` | Add manifest path; retain key |
 | Medium gold | `public/assets/game/items/gold-medium.webp` | 96×96, 1 frame | yes | generated `gold-medium` | Add manifest path; retain key |
 | Large gold | `public/assets/game/items/gold-large.webp` | 144×128, 1 frame | yes | generated `gold-large` | Add manifest path; retain key |
