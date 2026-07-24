@@ -30,8 +30,9 @@ export { WORLD_HEIGHT, WORLD_WIDTH };
 /**
  * Public React-facing controller for the Phaser game.
  *
- * GameSimulation owns all per-frame state. GameScene directly creates and
- * updates Phaser objects; no hidden canvas or dynamic CanvasTexture is used.
+ * React owns only the mount element. Phaser creates its own visible canvas so
+ * `Phaser.AUTO` can select WebGL or Canvas according to browser capabilities.
+ * GameSimulation owns all per-frame state and no CanvasTexture bridge exists.
  */
 export class GoldMinerEngine implements GameSceneHost {
   private readonly game: Phaser.Game;
@@ -46,9 +47,10 @@ export class GoldMinerEngine implements GameSceneHost {
     const gameKey = `GoldMinerGame-${suffix}`;
     const assets = new AssetSystem();
 
+    options.parent.replaceChildren();
     this.game = new Phaser.Game({
       type: Phaser.AUTO,
-      canvas: options.canvas,
+      parent: options.parent,
       width: WORLD_WIDTH,
       height: WORLD_HEIGHT,
       backgroundColor: "#8f5f3d",
@@ -72,6 +74,14 @@ export class GoldMinerEngine implements GameSceneHost {
         activePointers: 3,
       },
     });
+
+    const canvas = this.game.canvas;
+    canvas.classList.add("mine-canvas");
+    canvas.tabIndex = 0;
+    canvas.setAttribute(
+      "aria-label",
+      "黄金矿工游戏区。按空格、方向下键或点击发射抓钩，D 键使用炸药，Esc 暂停。",
+    );
   }
 
   attachScene(scene: GameScene): void {
@@ -98,7 +108,7 @@ export class GoldMinerEngine implements GameSceneHost {
     this.scene?.setRunning(false);
     if (!this.destroyed) {
       this.destroyed = true;
-      this.game.destroy(false);
+      this.game.destroy(true);
     }
     this.scene = undefined;
   }
